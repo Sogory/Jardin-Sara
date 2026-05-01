@@ -1,0 +1,534 @@
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+
+// ===== DATA =====
+const SHOP_PLANTS = [
+  {id:'peonia',emoji:'🌺',name:'Peonía',cost:40,desc:'Símbolo de prosperidad y sanación',waterEvery:24,waterCost:7},
+  {id:'lirio',emoji:'💐',name:'Lirio',cost:45,desc:'Pureza y renovación',waterEvery:20,waterCost:8},
+  {id:'granada',emoji:'🌹',name:'Flor de granada',cost:55,desc:'Fertilidad y abundancia',waterEvery:28,waterCost:9},
+  {id:'loto',emoji:'🪷',name:'Flor de loto',cost:70,desc:'Renace cada mañana del agua',waterEvery:16,waterCost:10},
+  {id:'tulipan',emoji:'🌷',name:'Tulipán',cost:35,desc:'Amor perfecto y nuevo comienzo',waterEvery:18,waterCost:6},
+  {id:'cactus',emoji:'🌵',name:'Cactus',cost:25,desc:'Resistente y noble, siempre ahí',waterEvery:48,waterCost:4},
+  {id:'suculenta',emoji:'🪴',name:'Suculenta',cost:30,desc:'Pequeña y tenaz',waterEvery:36,waterCost:5},
+  {id:'girasol',emoji:'🌻',name:'Girasol',cost:50,desc:'Siempre mirando al sol',waterEvery:22,waterCost:8}
+];
+
+const CURIOSIDADES = [
+  {id:'c1',cat:'griegos',catColor:'#534AB7',emoji:'🏛️',title:'La peonía lleva el nombre de un dios',body:'Peón era el médico de los dioses olímpicos. Según el mito, usó la flor para sanar a Plutón de una herida. Por envidia, Asclepio intentó matarlo — y Zeus lo convirtió en la flor para protegerlo.'},
+  {id:'c2',cat:'plantas',catColor:'#0F6E56',emoji:'🪷',title:'El loto nunca toca el barro que lo nutre',body:'La flor de loto emerge limpia del fango cada mañana. Los egipcios la usaron como símbolo del sol y la resurrección.'},
+  {id:'c3',cat:'historia',catColor:'#993C1D',emoji:'🌍',title:'Los tulipanes casi arruinaron a Holanda',body:'En 1637, un solo bulbo de tulipán llegó a costar más que una casa en Ámsterdam. La fiebre especulativa se llamó Tulipomania.'},
+  {id:'c4',cat:'griegos',catColor:'#534AB7',emoji:'⚡',title:'Perséfone y la granada: el origen de las estaciones',body:'Cuando Perséfone comió seis semillas de granada en el inframundo, quedó atada a pasar seis meses bajo tierra. Cada primavera que vuelve, el mundo florece.'},
+  {id:'c5',cat:'plantas',catColor:'#0F6E56',emoji:'🌸',title:'Las peonías pueden vivir cien años',body:'Una peonía bien plantada puede florecer durante un siglo sin ser trasplantada. Sus raíces contienen paeoniflorina, usada para calmar la ansiedad.'},
+  {id:'c6',cat:'historia',catColor:'#993C1D',emoji:'🏺',title:'Los griegos creían que las flores pensaban',body:'Teofrasto escribió el primer tratado botánico del mundo. Describió más de 500 plantas y sostuvo que tenían una forma de alma vegetativa.'},
+  {id:'c7',cat:'griegos',catColor:'#534AB7',emoji:'🌿',title:'El lirio era la flor favorita de Hera',body:'Según el mito, los lirios nacieron de la leche que Hera derramó. Las gotas que cayeron al cielo formaron la Vía Láctea.'},
+  {id:'c8',cat:'plantas',catColor:'#0F6E56',emoji:'🌺',title:'Las flores se comunican por el suelo',body:'Las plantas emiten señales químicas a través de redes de hongos subterráneos llamadas micorrizas o "internet del bosque".'},
+];
+
+const MOODS = ["Cansada","Ansiosa","Triste","Sin motivación","Feliz","Estresada","Enojada"];
+const PLACEHOLDERS = {
+  Feliz:"¿Qué encendió tu chispa hoy? Cuéntame ese destello...",
+  Ansiosa:"Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+  Estresada:"Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+  Enojada:"Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+  Cansada:"Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
+  Triste:"Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
+  "Sin motivación":"Cuéntame qué te pesa, te escucho... Aquí puedes descansar."
+};
+
+// ===== MAIN APP =====
+export default function Home() {
+  const [activeTab, setActiveTab] = useState('tareas');
+  const [xp, setXp] = useState(0);
+  const [toast, setToast] = useState(null);
+
+  // Load XP on mount
+  useEffect(() => {
+    supabase.from('user_stats').select('xp_total').eq('id',1).single().then(({data}) => {
+      if (data) setXp(data.xp_total);
+    });
+  }, []);
+
+  const addXp = useCallback(async (n) => {
+    const newXp = xp + n;
+    setXp(newXp);
+    await supabase.from('user_stats').update({xp_total: newXp}).eq('id',1);
+  }, [xp]);
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2800); };
+
+  const tabs = [
+    {id:'tareas',icon:'✏️',label:'Tareas'},
+    {id:'jardin',icon:'🌸',label:'Jardín'},
+    {id:'saber',icon:'✨',label:'Saber'},
+    {id:'doctor',icon:'💊',label:'Doctor'},
+    {id:'logros',icon:'⭐',label:'Logros'}
+  ];
+
+  return (
+    <div id="app">
+      {/* Hero */}
+      <div className="hero">
+        <span className="hero-icon">🌸</span>
+        <h1>Hola, Sara 🌸</h1>
+        <p>Un pasito a la vez. Sin prisa, sin culpa.</p>
+      </div>
+
+      {/* XP Bar */}
+      <div className="xp-row">
+        <span className="xp-label">💧 XP</span>
+        <div className="xp-bar-wrap"><div className="xp-bar-fill" style={{width:`${xp%100}%`}}/></div>
+        <span className="xp-val">{xp} XP</span>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'tareas' && <TabTareas xp={xp} addXp={addXp} showToast={showToast} />}
+      {activeTab === 'jardin' && <TabJardin xp={xp} addXp={addXp} showToast={showToast} />}
+      {activeTab === 'saber' && <TabSaber xp={xp} addXp={addXp} showToast={showToast} />}
+      {activeTab === 'doctor' && <TabDoctor showToast={showToast} />}
+      {activeTab === 'logros' && <TabLogros xp={xp} addXp={addXp} showToast={showToast} />}
+
+      {/* Bottom Nav */}
+      <nav className="bottom-nav">
+        {tabs.map(t => (
+          <button key={t.id} className={`nav-btn ${activeTab===t.id?'active':''}`} onClick={() => setActiveTab(t.id)}>
+            <span className="nav-icon">{t.icon}</span>{t.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* Toast */}
+      {toast && <div className="toast-container"><div className="toast">{toast}</div></div>}
+    </div>
+  );
+}
+
+// ===== TAB: TAREAS =====
+function TabTareas({ xp, addXp, showToast }) {
+  const [taskInput, setTaskInput] = useState('');
+  const [steps, setSteps] = useState(null);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [needsContext, setNeedsContext] = useState(false);
+  const [contextQuestion, setContextQuestion] = useState('');
+  const [contextAnswer, setContextAnswer] = useState('');
+  const [originalTask, setOriginalTask] = useState('');
+  const [celebration, setCelebration] = useState(null);
+
+  const breakTask = async (task, context) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ task, context })
+      });
+      const data = await res.json();
+
+      if (data.necesita_contexto && data.pregunta) {
+        setNeedsContext(true);
+        setContextQuestion(data.pregunta);
+        setOriginalTask(task);
+      } else if (data.pasos && data.pasos.length > 0) {
+        setSteps(data.pasos.slice(0, 10));
+        setStepIndex(0);
+        setCompletedSteps([]);
+        setNeedsContext(false);
+        setCelebration('🌱 Lo rompimos en pedacitos, Sara. ¡Empieza por el primero!');
+        setTimeout(() => setCelebration(null), 3000);
+      }
+    } catch (e) {
+      showToast('Error al procesar la tarea');
+    }
+    setLoading(false);
+  };
+
+  const toggleStep = (i) => {
+    if (i > stepIndex) return;
+    if (completedSteps.includes(i)) {
+      setCompletedSteps(completedSteps.filter(s => s !== i));
+    } else {
+      const newCompleted = [...completedSteps, i];
+      setCompletedSteps(newCompleted);
+      addXp(10);
+      if (i === stepIndex && i < steps.length - 1) setStepIndex(stepIndex + 1);
+
+      if (newCompleted.length === steps.length) {
+        setCelebration('🎉 ¡Misión cumplida, Sara!');
+      } else {
+        const msgs = ['✨ Ese es el 1%. Ya empezaste.','💪 Sigue a tu ritmo, Sara.','🌟 Cada pasito cuenta.','🎵 Pequeño logro, grande tú.'];
+        setCelebration(msgs[Math.floor(Math.random()*msgs.length)]);
+        setTimeout(() => setCelebration(null), 3000);
+      }
+    }
+  };
+
+  const finishTask = async () => {
+    await addXp(25);
+    showToast('✨ ¡+25 XP! Has completado la tarea.');
+    setSteps(null);
+    setCompletedSteps([]);
+    setStepIndex(0);
+  };
+
+  const allDone = steps && completedSteps.length === steps.length;
+  const pct = steps ? Math.round(completedSteps.length / steps.length * 100) : 0;
+
+  return (
+    <div className="section active">
+      {/* Input */}
+      {!steps && !needsContext && (
+        <>
+          <div className="input-row">
+            <input value={taskInput} onChange={e => setTaskInput(e.target.value)} placeholder="¿Qué tarea tienes pendiente?" onKeyDown={e => e.key==='Enter' && taskInput && breakTask(taskInput)} />
+            <button className="btn-blue" onClick={() => taskInput && breakTask(taskInput)} disabled={loading}>
+              {loading ? <span className="spinner"/> : 'Romper'}
+            </button>
+          </div>
+          <div className="empty-state"><span className="empty-icon">💭</span>Escribe algo que te pese<br/>y lo rompemos en pedacitos.</div>
+        </>
+      )}
+
+      {/* Clarification */}
+      {needsContext && (
+        <div className="card">
+          <p style={{fontSize:'13px',marginBottom:'10px'}}>🤔 <strong>{contextQuestion}</strong></p>
+          <input className="input-field" value={contextAnswer} onChange={e => setContextAnswer(e.target.value)} placeholder="Ej: El escritorio, la cama..." style={{marginBottom:'8px'}} />
+          <button className="btn-blue" onClick={() => { if(contextAnswer) breakTask(originalTask, contextAnswer); }} disabled={loading} style={{width:'100%'}}>
+            {loading ? <span className="spinner"/> : 'Romper en pedacitos'}
+          </button>
+        </div>
+      )}
+
+      {/* Celebration */}
+      {celebration && <div className="celebrate-msg">{celebration}</div>}
+
+      {/* Steps */}
+      {steps && (
+        <div className="task-card">
+          <div className="task-header">
+            <div className="task-name">{taskInput || originalTask}</div>
+            <div className="task-pct">{pct}%</div>
+          </div>
+          <div className="steps-list">
+            {steps.map((s, i) => (
+              <div key={i} className={`step-item ${completedSteps.includes(i)?'done':''} ${i>stepIndex?'locked':''}`} onClick={() => toggleStep(i)}>
+                <div className="step-check">{completedSteps.includes(i)?'✓':''}</div>
+                <span>{s}</span>
+              </div>
+            ))}
+          </div>
+          <div className="task-prog"><div className="task-prog-fill" style={{width:`${pct}%`}}/></div>
+
+          {allDone && (
+            <div style={{marginTop:'12px',textAlign:'center'}}>
+              <p style={{fontSize:'14px',fontWeight:600,marginBottom:'8px'}}>🌟 ¡Misión cumplida, Sara!</p>
+              <button className="btn-blue" onClick={finishTask} style={{width:'100%'}}>Terminar tarea y ganar 25 XP</button>
+            </div>
+          )}
+
+          {!allDone && (
+            <button className="btn-outline" onClick={() => {setSteps(null);setNeedsContext(false);}} style={{width:'100%',marginTop:'8px',fontSize:'11px'}}>
+              Cancelar tarea
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===== TAB: JARDÍN =====
+function TabJardin({ xp, addXp, showToast }) {
+  const [garden, setGarden] = useState([]);
+
+  useEffect(() => {
+    supabase.from('garden').select('*').order('created_at').then(({data}) => {
+      if (data) setGarden(data);
+    });
+  }, []);
+
+  const getStatus = (p) => {
+    const def = SHOP_PLANTS.find(x => x.id === p.plant_type);
+    if (!def) return 'ok';
+    const h = (Date.now() - new Date(p.last_watered).getTime()) / 3600000;
+    if (p.health < 30) return 'wilted';
+    if (h > def.waterEvery) return 'thirsty';
+    return 'ok';
+  };
+
+  const waterPlant = async (plant) => {
+    const def = SHOP_PLANTS.find(x => x.id === plant.plant_type);
+    if (!def) return;
+    if (xp < def.waterCost) { showToast(`Necesitas ${def.waterCost} XP para regar 💧`); return; }
+    const newHealth = Math.min(100, plant.health + 35);
+    await addXp(-def.waterCost);
+    await supabase.from('garden').update({health: newHealth, last_watered: new Date().toISOString()}).eq('id', plant.id);
+    setGarden(g => g.map(p => p.id === plant.id ? {...p, health: newHealth, last_watered: new Date().toISOString()} : p));
+    showToast(`💧 ${plant.name} te lo agradece, Sara.`);
+  };
+
+  const buyPlant = async (def) => {
+    if (xp < def.cost) { showToast(`Necesitas ${def.cost} XP para esta flor 💧`); return; }
+    if (garden.length >= 8) { showToast('Tu jardín está lleno 🌿'); return; }
+    await addXp(-def.cost);
+    const {data} = await supabase.from('garden').insert({name: def.name, plant_type: def.id, health: 100, last_watered: new Date().toISOString()}).select().single();
+    if (data) setGarden([...garden, data]);
+    showToast(`¡${def.emoji} ${def.name} ahora vive en tu jardín!`);
+  };
+
+  const hoursAgo = (d) => Math.round((Date.now() - new Date(d).getTime()) / 3600000);
+
+  return (
+    <div className="section active">
+      {garden.length === 0 ? (
+        <div className="empty-state"><span className="empty-icon">🪴</span>Tu jardín espera, Sara.<br/>Gana XP y adopta tu primera flor.</div>
+      ) : (
+        <>
+          <div className="section-label">Tu jardín</div>
+          <div className="garden-grid">
+            {garden.map(p => {
+              const def = SHOP_PLANTS.find(x => x.id === p.plant_type);
+              const status = getStatus(p);
+              const hColor = p.health > 60 ? '#1D9E75' : p.health > 30 ? '#EF9F27' : '#E24B4A';
+              return (
+                <div key={p.id} className={`garden-plant ${status}`}>
+                  <span className="plant-big-emoji">{def?.emoji || '🌱'}</span>
+                  <div className="plant-card-name">{p.name}</div>
+                  <div className="plant-card-time">regada hace {hoursAgo(p.last_watered)}h</div>
+                  <div className="health-bar-wrap"><div className="health-bar-fill" style={{width:`${p.health}%`,background:hColor}}/></div>
+                  <button className="water-btn" onClick={() => waterPlant(p)} disabled={xp < (def?.waterCost || 5)}>
+                    💧 Regar ({def?.waterCost || 5} XP)
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      <div className="section-label">Tienda de flores</div>
+      <div className="shop-grid">
+        {SHOP_PLANTS.map(p => (
+          <div key={p.id} className="shop-plant-card" onClick={() => buyPlant(p)}>
+            <span className="shop-emoji">{p.emoji}</span>
+            <div className="shop-name">{p.name}</div>
+            <div className="shop-cost">{p.cost} XP</div>
+            <div className="shop-desc">{p.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ===== TAB: SABER =====
+function TabSaber({ addXp, showToast }) {
+  const [activeCat, setActiveCat] = useState('todos');
+  const [readCurios, setReadCurios] = useState([]);
+
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('sara_read_curios') || '[]');
+    setReadCurios(saved);
+  }, []);
+
+  const readCurio = (id) => {
+    if (readCurios.includes(id)) return;
+    const newRead = [...readCurios, id];
+    setReadCurios(newRead);
+    localStorage.setItem('sara_read_curios', JSON.stringify(newRead));
+    addXp(15);
+    showToast('✨ +15 XP — el saber también riega el jardín.');
+  };
+
+  const cats = ['todos','griegos','plantas','historia'];
+  const catLabels = {griegos:'Griegos',plantas:'Plantas',historia:'Historia'};
+  const filtered = activeCat === 'todos' ? CURIOSIDADES : CURIOSIDADES.filter(c => c.cat === activeCat);
+
+  return (
+    <div className="section active">
+      <div style={{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}}>
+        {cats.map(c => (
+          <button key={c} className={`curiosity-xp-btn ${activeCat===c?'':'earned'}`} onClick={() => setActiveCat(c)} style={activeCat===c?{background:'var(--blue)',color:'white',borderColor:'var(--blue)'}:{}}>
+            {c === 'todos' ? 'Todos' : catLabels[c]}
+          </button>
+        ))}
+      </div>
+      {filtered.map(c => {
+        const read = readCurios.includes(c.id);
+        return (
+          <div key={c.id} className="curiosity-card">
+            <div className="curiosity-cat" style={{color:c.catColor}}>{c.emoji} {catLabels[c.cat]||c.cat}</div>
+            <div className="curiosity-title">{c.title}</div>
+            <div className="curiosity-body">{c.body}</div>
+            <div className={`curiosity-xp-btn ${read?'earned':''}`} onClick={() => !read && readCurio(c.id)}>
+              {read ? '✓ +15 XP ganados' : '✨ Leí esto — +15 XP'}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ===== TAB: DOCTOR =====
+function TabDoctor({ showToast }) {
+  const [mood, setMood] = useState('Cansada');
+  const [relato, setRelato] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [active, setActive] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [followUp, setFollowUp] = useState('');
+
+  const sendToDoctor = async (msgs) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/doctor', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ messages: msgs, mood, contextoSuperacion: '' })
+      });
+      const data = await res.json();
+      if (data.response) {
+        const newMsgs = [...msgs, {role:'assistant', content: data.response}];
+        setMessages(newMsgs);
+      }
+    } catch (e) {
+      showToast('Error en el sistema');
+    }
+    setLoading(false);
+  };
+
+  const startConversation = async () => {
+    if (!relato.trim()) return;
+    // Save to DB
+    try {
+      await supabase.from('registro_emocional_eje_gi').insert({
+        emocion: mood, relato_usuario: relato, es_momento_luz: mood === 'Feliz'
+      });
+    } catch(e) {}
+
+    const firstMsg = [{role:'user', content: `Me siento ${mood}. ${relato}`}];
+    setMessages(firstMsg);
+    setActive(true);
+    await sendToDoctor(firstMsg);
+  };
+
+  const sendFollowUp = async () => {
+    if (!followUp.trim()) return;
+    const newMsgs = [...messages, {role:'user', content: followUp}];
+    setMessages(newMsgs);
+    setFollowUp('');
+    await sendToDoctor(newMsgs);
+  };
+
+  const resetConversation = () => {
+    setMessages([]);
+    setActive(false);
+    setRelato('');
+    setFollowUp('');
+  };
+
+  return (
+    <div className="section active">
+      {/* Mood selector */}
+      <select className="select-field" value={mood} onChange={e => setMood(e.target.value)} style={{marginBottom:'10px'}}>
+        {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
+      </select>
+
+      {/* Initial text area */}
+      {!active && (
+        <>
+          <textarea className="textarea-field" value={relato} onChange={e => setRelato(e.target.value)} placeholder={PLACEHOLDERS[mood]} style={{marginBottom:'10px'}} />
+          <button className="btn-blue" onClick={startConversation} disabled={loading} style={{width:'100%'}}>
+            {loading ? <span className="spinner"/> : 'Iniciar Conversatorio'}
+          </button>
+        </>
+      )}
+
+      {/* Chat messages */}
+      {messages.length > 0 && (
+        <div className="chat-container" style={{marginTop:'12px'}}>
+          {messages.map((m, i) => (
+            <div key={i} className={`chat-msg ${m.role}`}>
+              <span className="avatar">{m.role==='user'?'🌸':'🌿'}</span>
+              {m.content}
+            </div>
+          ))}
+          {loading && <div className="chat-msg assistant"><span className="avatar">🌿</span><span className="spinner"/></div>}
+        </div>
+      )}
+
+      {/* Follow-up input */}
+      {active && !loading && (
+        <div style={{display:'flex',gap:'8px',marginTop:'8px'}}>
+          <input className="input-field" value={followUp} onChange={e => setFollowUp(e.target.value)} placeholder="Escribe tu respuesta..." onKeyDown={e => e.key==='Enter' && sendFollowUp()} style={{flex:1}} />
+          <button className="btn-blue" onClick={sendFollowUp}>Enviar</button>
+        </div>
+      )}
+
+      {active && (
+        <button className="btn-outline" onClick={resetConversation} style={{width:'100%',marginTop:'8px',fontSize:'11px'}}>
+          🔄 Nueva conversación
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ===== TAB: LOGROS =====
+function TabLogros({ addXp, showToast }) {
+  const [logroText, setLogroText] = useState('');
+  const [logros, setLogros] = useState([]);
+
+  useEffect(() => {
+    supabase.from('achievements').select('*').order('created_at', {ascending:false}).limit(20).then(({data}) => {
+      if (data) setLogros(data);
+    });
+  }, []);
+
+  const celebrate = async () => {
+    if (!logroText.trim()) return;
+    try {
+      const {data} = await supabase.from('achievements').insert({
+        description: logroText, xp: 15, created_at: new Date().toISOString()
+      }).select().single();
+      await addXp(15);
+      if (data) setLogros([data, ...logros]);
+      setLogroText('');
+      showToast('🌟 ¡Bien hecho, Sara! +15 XP');
+    } catch (e) {
+      showToast('Error al guardar');
+    }
+  };
+
+  return (
+    <div className="section active">
+      <div className="card">
+        <p style={{fontSize:'13px',fontWeight:600,marginBottom:'8px'}}>⭐ ¿De qué te sientes orgullosa hoy?</p>
+        <textarea className="textarea-field" value={logroText} onChange={e => setLogroText(e.target.value)} placeholder="Escribe aquí tu logro..." style={{minHeight:'80px',marginBottom:'8px'}} />
+        <button className="btn-blue" onClick={celebrate} style={{width:'100%'}}>¡Me felicito! (+15 XP)</button>
+      </div>
+
+      {logros.length > 0 && (
+        <>
+          <div className="section-label" style={{marginTop:'12px'}}>Logros recientes</div>
+          {logros.map(l => (
+            <div key={l.id} className="log-entry">
+              <div className="log-icon">🌟</div>
+              <div className="log-text">
+                <strong>{l.description}</strong>
+                <div className="log-time">{l.created_at?.slice(0,10)} · +{l.xp || 15} XP</div>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {logros.length === 0 && (
+        <div className="empty-state"><span className="empty-icon">🌟</span>Aquí guardaremos cada<br/>pequeña victoria tuya, Sara.</div>
+      )}
+    </div>
+  );
+}
