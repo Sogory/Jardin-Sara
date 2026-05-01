@@ -64,8 +64,8 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
     conversation += "\nContinúa el protocolo EJE GI. Responde como Co-Ingeniero basándote en lo último que Sara compartió. Haz máximo UNA pregunta al final para mantener el flujo.";
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: conversation,
+      model: "gemini-1.5-flash",
+      contents: [{ role: "user", parts: [{ text: conversation }] }],
     });
 
     return Response.json({ response: response.text });
