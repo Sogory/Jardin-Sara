@@ -332,6 +332,8 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   const [recommendedPlant, setRecommendedPlant] = useState(null);
   const [hiddenPlants, setHiddenPlants] = useState([]);
 
+  const [customPlants, setCustomPlants] = useState([]);
+
   useEffect(() => {
     supabase.from('garden').select('*').order('created_at').then(({ data, error }) => {
       if (data && !error) setGarden(data);
@@ -343,7 +345,12 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
 
     const storedHidden = JSON.parse(localStorage.getItem('hiddenPlants') || '[]');
     setHiddenPlants(storedHidden);
+    
+    const storedCustom = JSON.parse(localStorage.getItem('customPlants') || '[]');
+    setCustomPlants(storedCustom);
   }, []);
+
+  const ALL_PLANTS = [...SHOP_PLANTS, ...customPlants];
 
   const hidePlant = (plantId, e) => {
     e.preventDefault();
@@ -356,7 +363,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   };
 
   const getStatus = (p) => {
-    const def = SHOP_PLANTS.find(x => x.id === p.plant_type);
+    const def = ALL_PLANTS.find(x => x.id === p.plant_type);
     if (!def) return 'ok';
     const h = (Date.now() - new Date(p.last_watered).getTime()) / 3600000;
     if (p.health < 30) return 'wilted';
@@ -365,7 +372,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   };
 
   const waterPlant = async (plant) => {
-    const def = SHOP_PLANTS.find(x => x.id === plant.plant_type);
+    const def = ALL_PLANTS.find(x => x.id === plant.plant_type);
     if (!def) return;
     if (xp < def.waterCost) { showToast(`Necesitas ${def.waterCost} XP para regar 💧`); return; }
     const newHealth = Math.min(100, plant.health + 35);
@@ -389,35 +396,26 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
     setFloristLoading(true);
     setRecommendedPlant(null);
     try {
-      const res = await fetch('/api/tasks', { // Reutilizamos el motor o creamos uno nuevo, pero por ahora simplifiquemos con un prompt local o una llamada genérica
+      const res = await fetch('/api/florist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task: `Elegir una planta de la lista [${SHOP_PLANTS.map(p => p.name).join(', ')}] para Sara basándose en: ${floristInput}. Responde solo con JSON: {"msg": "...", "plantId": "..."}`, context: 'Actúa como el florista Sogory' })
+        body: JSON.stringify({ input: floristInput, existingPlants: ALL_PLANTS })
       });
       const data = await res.json();
-      if (data.pasos && data.pasos.length > 0) {
-        // Fallback si la API de tareas devuelve pasos en vez de la recomendación
-        setFloristMsg("Sogory está buscando la mejor semilla para ti...");
+      
+      if (data.error) throw new Error(data.msg);
+
+      setFloristMsg(`Sogory dice: "${data.msg}"`);
+      
+      if (data.isNew && data.newPlant) {
+        setRecommendedPlant(data.newPlant);
       } else {
-        // En un mundo ideal tendríamos /api/florist, pero podemos simularlo o pedirle a la IA que responda en un formato específico
-        // Para no complicar con más APIs si la cuota está baja, usemos una lógica local si falla
-        setFloristMsg("Sogory está meditando en tu elección... ¡Pronto estará listo!");
+        const found = ALL_PLANTS.find(p => p.id === data.plantId);
+        setRecommendedPlant(found || ALL_PLANTS[0]);
       }
-
-      // Lógica de fallback local por si la cuota está terminada
-      const randomPlant = SHOP_PLANTS.filter(p => !hiddenPlants.includes(p.id))[Math.floor(Math.random() * SHOP_PLANTS.filter(p => !hiddenPlants.includes(p.id)).length)];
-      setTimeout(() => {
-        if(randomPlant) {
-          setFloristMsg(`Sogory dice: "Sara, veo que hoy necesitas un ${randomPlant.name}. ${randomPlant.desc}."`);
-          setRecommendedPlant(randomPlant);
-        } else {
-          setFloristMsg("No quedan plantas disponibles.");
-        }
-        setFloristLoading(false);
-      }, 1500);
-
+      setFloristLoading(false);
     } catch (e) {
-      const fallbackPlant = SHOP_PLANTS.filter(p => !hiddenPlants.includes(p.id))[0] || SHOP_PLANTS[0];
+      const fallbackPlant = ALL_PLANTS.filter(p => !hiddenPlants.includes(p.id))[0] || ALL_PLANTS[0];
       setFloristMsg(`Sogory salió un momento a buscar agua. Pero yo te recomendaría un ${fallbackPlant?.name || 'Girasol'} para iluminar el día.`);
       setFloristLoading(false);
     }
@@ -434,7 +432,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
           <div className="section-label">Tu jardín</div>
           <div className="garden-grid">
             {garden.map(p => {
-              const def = SHOP_PLANTS.find(x => x.id === p.plant_type);
+              const def = ALL_PLANTS.find(x => x.id === p.plant_type);
               const status = getStatus(p);
               const hColor = p.health > 60 ? '#1D9E75' : p.health > 30 ? '#EF9F27' : '#E24B4A';
               return (
@@ -502,7 +500,16 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
                 <div style={{ fontSize: '12px', fontWeight: 600 }}>{recommendedPlant.name}</div>
                 <div style={{ fontSize: '10px', color: 'var(--text3)' }}>{recommendedPlant.cost} XP</div>
               </div>
-              <button className="btn-blue" onClick={() => { buyPlant(recommendedPlant); setRecommendedPlant(null); setFloristInput(''); }} style={{ padding: '6px 10px', fontSize: '11px' }}>
+              <button className="btn-blue" onClick={() => { 
+                if (recommendedPlant && !ALL_PLANTS.find(x => x.id === recommendedPlant.id)) {
+                  const newCustom = [...customPlants, recommendedPlant];
+                  setCustomPlants(newCustom);
+                  localStorage.setItem('customPlants', JSON.stringify(newCustom));
+                }
+                buyPlant(recommendedPlant); 
+                setRecommendedPlant(null); 
+                setFloristInput(''); 
+              }} style={{ padding: '6px 10px', fontSize: '11px' }}>
                 Adoptar
               </button>
               <button className="btn-outline" onClick={() => { setRecommendedPlant(null); setFloristInput(''); }} style={{ padding: '6px 10px', fontSize: '11px' }}>
