@@ -41,6 +41,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('tareas');
   const [xp, setXp] = useState(0);
   const [toast, setToast] = useState(null);
+  const [globalMood, setGlobalMood] = useState('Feliz');
   const [mounted, setMounted] = useState(false);
 
   // Mark as mounted (prevents hydration mismatch)
@@ -90,9 +91,9 @@ export default function Home() {
 
       {/* Tab Content */}
       {activeTab === 'tareas' && <TabTareas xp={xp} addXp={addXp} showToast={showToast} />}
-      {activeTab === 'jardin' && <TabJardin xp={xp} addXp={addXp} showToast={showToast} />}
+      {activeTab === 'jardin' && <TabJardin xp={xp} addXp={addXp} showToast={showToast} globalMood={globalMood} />}
       {activeTab === 'saber' && <TabSaber xp={xp} addXp={addXp} showToast={showToast} />}
-      {activeTab === 'doctor' && <TabDoctor showToast={showToast} />}
+      {activeTab === 'doctor' && <TabDoctor showToast={showToast} globalMood={globalMood} setGlobalMood={setGlobalMood} />}
       {activeTab === 'logros' && <TabLogros xp={xp} addXp={addXp} showToast={showToast} />}
 
       {/* Bottom Nav */}
@@ -319,8 +320,9 @@ function TabTareas({ xp, addXp, showToast }) {
 }
 
 // ===== TAB: JARDÍN =====
-function TabJardin({ xp, addXp, showToast }) {
+function TabJardin({ xp, addXp, showToast, globalMood }) {
   const [garden, setGarden] = useState([]);
+  const [selectedPlant, setSelectedPlant] = useState(null);
 
   useEffect(() => {
     supabase.from('garden').select('*').order('created_at').then(({data, error}) => {
@@ -372,13 +374,13 @@ function TabJardin({ xp, addXp, showToast }) {
               const status = getStatus(p);
               const hColor = p.health > 60 ? '#1D9E75' : p.health > 30 ? '#EF9F27' : '#E24B4A';
               return (
-                <div key={p.id} className={`garden-plant ${status}`}>
+                <div key={p.id} className={`garden-plant ${status}`} onClick={() => setSelectedPlant(p)}>
                   <span className="plant-big-emoji">{def?.emoji || '🌱'}</span>
                   <div className="plant-card-name">{p.name}</div>
                   <div className="plant-card-time">regada hace {hoursAgo(p.last_watered)}h</div>
                   <div className="health-bar-wrap"><div className="health-bar-fill" style={{width:`${p.health}%`,background:hColor}}/></div>
-                  <button className="water-btn" onClick={() => waterPlant(p)} disabled={xp < (def?.waterCost || 5)}>
-                    💧 Regar ({def?.waterCost || 5} XP)
+                  <button className="water-btn" onClick={(e) => { e.stopPropagation(); setSelectedPlant(p); }}>
+                    Cuidar 🌱
                   </button>
                 </div>
               );
@@ -397,6 +399,122 @@ function TabJardin({ xp, addXp, showToast }) {
             <div className="shop-desc">{p.desc}</div>
           </div>
         ))}
+      </div>
+
+      {/* MODAL TAMAGOTCHI */}
+      {selectedPlant && <TamagotchiModal 
+        plant={selectedPlant} 
+        onClose={() => setSelectedPlant(null)}
+        xp={xp} addXp={addXp} showToast={showToast}
+        globalMood={globalMood}
+        setGarden={setGarden}
+      />}
+    </div>
+  );
+}
+
+function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, setGarden }) {
+  const def = SHOP_PLANTS.find(x => x.id === plant.plant_type) || {};
+  const emoji = def.emoji || '🌱';
+  const name = plant.name || 'Planta Misteriosa';
+  const hoursPassed = (Date.now() - new Date(plant.last_watered).getTime()) / 3600000;
+  
+  let statusMsg = "";
+  if (globalMood === "Triste") statusMsg = "Mis espinas hoy son tu escudo, Sara. Respira conmigo.";
+  else if (globalMood === "Feliz") statusMsg = "¡Qué rico solecito! Estoy vibrando con tu alegría.";
+  else if (globalMood === "Ansiosa") statusMsg = "Siente mi calma, Sara. Yo solo crezco, sin prisas.";
+  else if (globalMood === "Estresada") statusMsg = "Una gota a la vez, como mi riego. Todo estará bien.";
+  else {
+    if (plant.health === 0) statusMsg = "Estoy sequita... Necesito magia (Abono) para revivir.";
+    else if (plant.health <= 20) statusMsg = "¡Tengo mucha sed! 🐛 Ayúdame a brillar.";
+    else statusMsg = "¡Qué lindo día! Me encanta estar aquí contigo.";
+  }
+
+  let heart = "❤️"; let color = "#388e3c";
+  if (plant.health === 0) { heart = "💔"; color = "#8b4513"; }
+  else if (plant.health <= 40) { heart = "💛"; color = "#fbc02d"; }
+
+  const handleWater = async () => {
+    const cost = def.waterCost || 5;
+    if (plant.health <= 0) { showToast("El agua no es suficiente. ¡Necesita abono!"); return; }
+    if (xp < cost) { showToast(`Necesitas ${cost} XP para regar 💧`); return; }
+    
+    if (["Ansiosa", "Estresada", "Enojada", "Triste"].includes(globalMood)) {
+      showToast(`🧘 Micro-Ritual: Refresca tu mente como a tu ${name}.`);
+    } else {
+      showToast("🚿 ¡Regando... plip plop! 💧");
+    }
+
+    const newHealth = 100;
+    await addXp(-cost);
+    await supabase.from('garden').update({health: newHealth, last_watered: new Date().toISOString()}).eq('id', plant.id);
+    setGarden(g => g.map(p => p.id === plant.id ? {...p, health: newHealth, last_watered: new Date().toISOString()} : p));
+    setTimeout(onClose, 1500);
+  };
+
+  const handleAbono = async () => {
+    if (xp < 15) { showToast("Necesitas 15 XP para el Abono ✨"); return; }
+    
+    if (["Ansiosa", "Estresada", "Enojada", "Triste"].includes(globalMood)) {
+      showToast(`✨ Micro-Ritual: Paciencia. Todo crece a su ritmo.`);
+    } else {
+      showToast("✨ ¡Magia aplicada! Tu planta crece con fuerza.");
+    }
+
+    await addXp(-15);
+    const newHealth = 100;
+    await supabase.from('garden').update({health: newHealth, last_watered: new Date().toISOString()}).eq('id', plant.id);
+    setGarden(g => g.map(p => p.id === plant.id ? {...p, health: newHealth, last_watered: new Date().toISOString()} : p));
+    setTimeout(onClose, 1500);
+  };
+
+  const handleHerbario = async () => {
+    try {
+      await supabase.from('herbario').insert({
+        name, emoji,
+        relato_vida: `Cuidada con amor hasta su trasplante el ${new Date().toLocaleDateString()}.`
+      });
+      await supabase.from('achievements').insert({ description: `Trasplantaste tu ${name} al Herbario.`, xp: 10 });
+      await addXp(10);
+      await supabase.from('garden').delete().eq('id', plant.id);
+      
+      setGarden(g => g.filter(p => p.id !== plant.id));
+      showToast("¡Trasplantada con éxito al Herbario! +10 XP");
+      onClose();
+    } catch(e) {
+      showToast("Error al trasplantar. ¿Existe la tabla herbario?");
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        <div style={{textAlign:'center'}}>
+          <div style={{fontSize:'80px',lineHeight:1,marginBottom:'10px'}}>{emoji}</div>
+          <h3 style={{margin:0,fontSize:'22px'}}>{name}</h3>
+          
+          <div className="modal-bubble">💭 "{statusMsg}"</div>
+          
+          <div style={{marginBottom:'20px'}}>
+            <span style={{fontSize:'40px'}}>{heart}</span>
+            <p style={{fontSize:'12px',color:'var(--text3)',marginTop:'5px'}}>
+              Salud: {Math.round(plant.health)}% | Riego: hace {Math.floor(hoursPassed)}h {Math.round((hoursPassed % 1) * 60)}m
+            </p>
+          </div>
+          
+          <div style={{display:'flex',gap:'8px'}}>
+            <button className={plant.health > 0 ? "btn-blue" : "btn-outline"} style={{flex:1,padding:'12px'}} onClick={handleWater}>
+              Regar 🚿<br/><span style={{fontSize:'10px',fontWeight:'normal'}}>{def.waterCost||5} XP</span>
+            </button>
+            <button className="btn-outline" style={{flex:1,padding:'12px',borderColor:'#fbc02d',color:'#fbc02d'}} onClick={handleAbono}>
+              Abono ✨<br/><span style={{fontSize:'10px',fontWeight:'normal'}}>15 XP</span>
+            </button>
+            <button className="btn-outline" style={{flex:1,padding:'12px'}} onClick={handleHerbario} title="Trasplantar al Herbario">
+              🏺<br/><span style={{fontSize:'10px',fontWeight:'normal'}}>Herbario</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -454,8 +572,7 @@ function TabSaber({ addXp, showToast }) {
 }
 
 // ===== TAB: DOCTOR =====
-function TabDoctor({ showToast }) {
-  const [mood, setMood] = useState('Cansada');
+function TabDoctor({ showToast, globalMood, setGlobalMood }) {
   const [relato, setRelato] = useState('');
   const [messages, setMessages] = useState([]);
   const [active, setActive] = useState(false);
@@ -468,7 +585,7 @@ function TabDoctor({ showToast }) {
       const res = await fetch('/api/doctor', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ messages: msgs, mood, contextoSuperacion: '' })
+        body: JSON.stringify({ messages: msgs, mood: globalMood, contextoSuperacion: '' })
       });
       const data = await res.json();
       if (data.response) {
@@ -486,11 +603,11 @@ function TabDoctor({ showToast }) {
     // Save to DB
     try {
       await supabase.from('registro_emocional_eje_gi').insert({
-        emocion: mood, relato_usuario: relato, es_momento_luz: mood === 'Feliz'
+        emocion: globalMood, relato_usuario: relato, es_momento_luz: globalMood === 'Feliz'
       });
     } catch(e) {}
 
-    const firstMsg = [{role:'user', content: `Me siento ${mood}. ${relato}`}];
+    const firstMsg = [{role:'user', content: `Me siento ${globalMood}. ${relato}`}];
     setMessages(firstMsg);
     setActive(true);
     await sendToDoctor(firstMsg);
@@ -514,14 +631,14 @@ function TabDoctor({ showToast }) {
   return (
     <div className="section active">
       {/* Mood selector */}
-      <select className="select-field" value={mood} onChange={e => setMood(e.target.value)} style={{marginBottom:'10px'}}>
+      <select className="select-field" value={globalMood} onChange={e => setGlobalMood(e.target.value)} style={{marginBottom:'10px'}}>
         {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
       </select>
 
       {/* Initial text area */}
       {!active && (
         <>
-          <textarea className="textarea-field" value={relato} onChange={e => setRelato(e.target.value)} placeholder={PLACEHOLDERS[mood]} style={{marginBottom:'10px'}} />
+          <textarea className="textarea-field" value={relato} onChange={e => setRelato(e.target.value)} placeholder={PLACEHOLDERS[globalMood]} style={{marginBottom:'10px'}} />
           <button className="btn-blue" onClick={startConversation} disabled={loading} style={{width:'100%'}}>
             {loading ? <span className="spinner"/> : 'Iniciar Conversatorio'}
           </button>
