@@ -325,7 +325,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   const [herbario, setHerbario] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [floristMsg, setFloristMsg] = useState('¿Buscas algo especial hoy, Sara?');
+  const [floristMsg, setFloristMsg] = useState('¿Buscando señales de vida en este sector, Sara? Dime qué necesitas.');
   const [floristLoading, setFloristLoading] = useState(false);
   const [floristInput, setFloristInput] = useState('');
   const [recommendedPlant, setRecommendedPlant] = useState(null);
@@ -434,7 +434,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
       )}
 
       <div className="card" style={{marginTop:'10px',background:'var(--bg2)',borderColor:'var(--blue)'}}>
-        <div style={{fontSize:'12px',fontWeight:700,marginBottom:'8px',color:'var(--blue)'}}>🌿 Consulta al Florista (Sogory)</div>
+        <div style={{fontSize:'12px',fontWeight:700,marginBottom:'8px',color:'var(--blue)'}}>👨‍🚀 ¿Qué flor buscas? (Sogory)</div>
         <p style={{fontSize:'12px',marginBottom:'10px',lineHeight:'1.4'}}>{floristMsg}</p>
         
         {!recommendedPlant ? (
