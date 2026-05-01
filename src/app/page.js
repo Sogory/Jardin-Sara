@@ -44,12 +44,28 @@ export default function Home() {
   const [toast, setToast] = useState(null);
   const [globalMood, setGlobalMood] = useState('Feliz');
   const [mounted, setMounted] = useState(false);
+  const [session, setSession] = useState(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
-  // Mark as mounted (prevents hydration mismatch)
+  // Mark as mounted and initialize auth
   useEffect(() => {
     setMounted(true);
-    const savedProfile = localStorage.getItem('sara_active_profile');
-    if (savedProfile) setProfile(savedProfile);
+    
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session) {
+        const savedProfile = localStorage.getItem('sara_active_profile');
+        if (savedProfile) setProfile(savedProfile);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Load XP when profile changes
@@ -74,6 +90,21 @@ export default function Home() {
     setProfile(p);
   };
 
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      showToast('Error: Verifica tu correo y contraseña');
+    }
+    setAuthLoading(false);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setProfile(null);
+  };
+
   const tabs = [
     { id: 'tareas', icon: '✏️', label: 'Tareas' },
     { id: 'jardin', icon: '🌸', label: 'Jardín' },
@@ -84,6 +115,27 @@ export default function Home() {
 
   // Prevent hydration mismatch - show nothing until mounted
   if (!mounted) return <div id="app"><div className="hero"><span className="hero-icon">🌸</span><h1>Cargando...</h1></div></div>;
+
+  // LOGIN SCREEN
+  if (!session) {
+    return (
+      <div className="profile-screen" style={{ justifyContent: 'center' }}>
+        {toast && <div className="toast-notification">{toast}</div>}
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <span className="hero-icon" style={{ fontSize: '48px', marginBottom: '10px', display: 'inline-block' }}>🪴</span>
+          <h1 className="profile-title" style={{ fontSize: '24px' }}>El Jardín</h1>
+          <p className="profile-subtitle">Inicia sesión en tu cuenta maestra</p>
+        </div>
+        <form onSubmit={handleLogin} style={{ width: '100%', maxWidth: '300px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <input className="input-field" type="email" placeholder="Correo electrónico" value={email} onChange={e => setEmail(e.target.value)} required style={{ background: 'var(--bg2)', color: 'white', borderColor: 'var(--border)' }} />
+          <input className="input-field" type="password" placeholder="Contraseña secreta" value={password} onChange={e => setPassword(e.target.value)} required style={{ background: 'var(--bg2)', color: 'white', borderColor: 'var(--border)' }} />
+          <button type="submit" className="btn-blue" disabled={authLoading}>
+            {authLoading ? <span className="spinner" /> : 'Entrar al Jardín'}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   // PROFILE SCREEN
   if (!profile) {
@@ -105,6 +157,9 @@ export default function Home() {
             <button className="profile-btn allen" style={{marginTop: 'auto'}}>Entrar</button>
           </div>
         </div>
+        <button onClick={handleLogout} style={{ marginTop: '40px', background: 'transparent', border: 'none', color: 'var(--text3)', textDecoration: 'underline', cursor: 'pointer' }}>
+          Cerrar Sesión Maestra
+        </button>
       </div>
     );
   }
