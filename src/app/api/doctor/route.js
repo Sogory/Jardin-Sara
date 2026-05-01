@@ -1,10 +1,19 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function POST(request) {
   try {
     const { messages, mood, contextoSuperacion } = await request.json();
+    const model = ai.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      safetySettings: [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      ]
+    });
 
     const emocionesCriticas = ["Ansiosa", "Estresada", "Enojada", "Triste", "Cansada", "Sin motivación"];
     const esCritico = emocionesCriticas.includes(mood);
@@ -63,14 +72,12 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
     }
     conversation += "\nContinúa el protocolo EJE GI. Responde como Co-Ingeniero basándote en lo último que Sara compartió. Haz máximo UNA pregunta al final para mantener el flujo.";
 
-    const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
-      contents: [{ role: "user", parts: [{ text: conversation }] }],
-    });
+    const result = await model.generateContent(conversation);
+    const response = await result.response;
 
-    return Response.json({ response: response.text });
+    return Response.json({ response: response.text() });
   } catch (error) {
-    console.error("Doctor API error:", error.message || error);
+    console.error("Doctor API error:", error);
     return Response.json({ 
       error: true,
       response: "Lo siento, Sara. El sistema está descansando un momento. Intenta de nuevo en unos minutos. 🌿\n\nMientras tanto: pies al suelo, hombros sueltos, tres respiraciones profundas.\n\nTe amo Sara, si no puedes sola podemos juntos."
