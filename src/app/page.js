@@ -435,9 +435,8 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
 
       <div className="card" style={{marginTop:'10px',background:'var(--bg2)',borderColor:'var(--blue)'}}>
         <div style={{fontSize:'12px',fontWeight:700,lineHeight:1.4,color:'var(--blue)'}}>
-          👨‍🚀 te saluda Sogory<br/>
-          Floreria 33 a su servicio<br/>
-          ¿Qué flor buscas hoy?
+          👨‍🚀 te saluda Sogory Floreria 33 a su servicio?<br/>
+          Encarga tu flor
         </div>
         <p style={{fontSize:'12px',marginTop:'8px',marginBottom:'10px',lineHeight:'1.4'}}>{floristMsg}</p>
         
@@ -446,7 +445,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
             <input 
               value={floristInput} 
               onChange={e => setFloristInput(e.target.value)} 
-              placeholder="¿Qué flor buscas hoy?" 
+              placeholder="Encarga tu flor" 
               style={{fontSize:'12px',padding:'8px'}}
             />
             <button className="btn-blue" onClick={askFlorist} disabled={floristLoading} style={{padding:'8px 12px'}}>
