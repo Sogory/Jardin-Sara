@@ -95,7 +95,7 @@ export default function Home() {
     setAuthLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      showToast('Error: Verifica tu correo y contraseña');
+      showToast('Error: ' + error.message);
     }
     setAuthLoading(false);
   };
