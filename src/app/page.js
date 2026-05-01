@@ -322,11 +322,16 @@ function TabTareas({ xp, addXp, showToast }) {
 // ===== TAB: JARDÍN =====
 function TabJardin({ xp, addXp, showToast, globalMood }) {
   const [garden, setGarden] = useState([]);
+  const [herbario, setHerbario] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState(null);
 
   useEffect(() => {
     supabase.from('garden').select('*').order('created_at').then(({data, error}) => {
       if (data && !error) setGarden(data);
+    }).catch(() => {});
+    
+    supabase.from('herbario').select('*').order('created_at', {ascending: false}).then(({data, error}) => {
+      if (data && !error) setHerbario(data);
     }).catch(() => {});
   }, []);
 
@@ -401,6 +406,27 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
         ))}
       </div>
 
+      {herbario.length > 0 && (
+        <div style={{marginTop:'20px'}}>
+          <div className="section-label" style={{display:'flex',alignItems:'center',gap:'6px'}}>
+            🏺 Herbario de la Memoria
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+            {herbario.map(h => (
+              <div key={h.id} className="log-entry">
+                <div className="log-icon" style={{fontSize:'24px'}}>{h.emoji || '🌱'}</div>
+                <div className="log-text">
+                  <strong style={{color:'var(--text)',fontSize:'14px'}}>{h.name}</strong>
+                  <div style={{marginTop:'4px',lineHeight:1.4,color:'var(--text2)'}}>
+                    {h.relato_vida}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* MODAL TAMAGOTCHI */}
       {selectedPlant && <TamagotchiModal 
         plant={selectedPlant} 
@@ -408,12 +434,13 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
         xp={xp} addXp={addXp} showToast={showToast}
         globalMood={globalMood}
         setGarden={setGarden}
+        setHerbario={setHerbario}
       />}
     </div>
   );
 }
 
-function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, setGarden }) {
+function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, setGarden, setHerbario }) {
   const def = SHOP_PLANTS.find(x => x.id === plant.plant_type) || {};
   const emoji = def.emoji || '🌱';
   const name = plant.name || 'Planta Misteriosa';
@@ -470,10 +497,15 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
 
   const handleHerbario = async () => {
     try {
-      await supabase.from('herbario').insert({
+      const { data } = await supabase.from('herbario').insert({
         name, emoji,
         relato_vida: `Cuidada con amor hasta su trasplante el ${new Date().toLocaleDateString()}.`
-      });
+      }).select().single();
+      
+      if (data) {
+        setHerbario(h => [data, ...h]);
+      }
+      
       await supabase.from('achievements').insert({ description: `Trasplantaste tu ${name} al Herbario.`, xp: 10 });
       await addXp(10);
       await supabase.from('garden').delete().eq('id', plant.id);
