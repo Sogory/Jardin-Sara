@@ -556,11 +556,16 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
 function TabSaber({ addXp, showToast }) {
   const [activeCat, setActiveCat] = useState('todos');
   const [readCurios, setReadCurios] = useState([]);
+  const [localCurios, setLocalCurios] = useState([]);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('sara_read_curios') || '[]');
       setReadCurios(saved);
+      // Solo cargar las que no se han leído
+      const unreadStatic = CURIOSIDADES.filter(c => !saved.includes(c.id));
+      setLocalCurios(unreadStatic);
     } catch(e) {}
   }, []);
 
@@ -569,13 +574,36 @@ function TabSaber({ addXp, showToast }) {
     const newRead = [...readCurios, id];
     setReadCurios(newRead);
     localStorage.setItem('sara_read_curios', JSON.stringify(newRead));
+    
+    // Quitar de la pantalla
+    setLocalCurios(prev => prev.filter(c => c.id !== id));
+    
     addXp(15);
     showToast('✨ +15 XP — el saber también riega el jardín.');
   };
 
+  const loadMore = async () => {
+    setLoadingMore(true);
+    try {
+      const res = await fetch('/api/knowledge', { method: 'POST' });
+      const data = await res.json();
+      if (data.curiosities && data.curiosities.length > 0) {
+        // Asignar IDs únicos a los nuevos datos
+        const newCurios = data.curiosities.map(c => ({...c, id: 'ai_' + Math.random().toString(36).substr(2, 9)}));
+        setLocalCurios(prev => [...prev, ...newCurios]);
+        showToast('✨ El universo te ha enviado más curiosidades.');
+      } else {
+        showToast('⏳ El oráculo está descansando. Intenta en un momento.');
+      }
+    } catch (e) {
+      showToast('⏳ Error de conexión.');
+    }
+    setLoadingMore(false);
+  };
+
   const cats = ['todos','griegos','plantas','historia'];
   const catLabels = {griegos:'Griegos',plantas:'Plantas',historia:'Historia'};
-  const filtered = activeCat === 'todos' ? CURIOSIDADES : CURIOSIDADES.filter(c => c.cat === activeCat);
+  const filtered = activeCat === 'todos' ? localCurios : localCurios.filter(c => c.cat === activeCat);
 
   return (
     <div className="section active">
@@ -586,19 +614,28 @@ function TabSaber({ addXp, showToast }) {
           </button>
         ))}
       </div>
-      {filtered.map(c => {
-        const read = readCurios.includes(c.id);
-        return (
-          <div key={c.id} className="curiosity-card">
-            <div className="curiosity-cat" style={{color:c.catColor}}>{c.emoji} {catLabels[c.cat]||c.cat}</div>
-            <div className="curiosity-title">{c.title}</div>
-            <div className="curiosity-body">{c.body}</div>
-            <div className={`curiosity-xp-btn ${read?'earned':''}`} onClick={() => !read && readCurio(c.id)}>
-              {read ? '✓ +15 XP ganados' : '✨ Leí esto — +15 XP'}
-            </div>
+      
+      {filtered.length === 0 && (
+        <div className="empty-state" style={{marginTop:'20px'}}>
+          <span className="empty-icon">📖</span>
+          Has leído todo por ahora.<br/>Pide más conocimiento al universo.
+        </div>
+      )}
+
+      {filtered.map(c => (
+        <div key={c.id} className="curiosity-card">
+          <div className="curiosity-cat" style={{color:c.catColor}}>{c.emoji} {catLabels[c.cat]||c.cat}</div>
+          <div className="curiosity-title">{c.title}</div>
+          <div className="curiosity-body">{c.body}</div>
+          <div className="curiosity-xp-btn" onClick={() => readCurio(c.id)}>
+            ✨ Leí esto — +15 XP
           </div>
-        );
-      })}
+        </div>
+      ))}
+
+      <button className="btn-outline" onClick={loadMore} disabled={loadingMore} style={{width:'100%', marginTop:'15px', padding:'15px'}}>
+        {loadingMore ? <span className="spinner"/> : '✨ Pedir más datos al universo'}
+      </button>
     </div>
   );
 }
