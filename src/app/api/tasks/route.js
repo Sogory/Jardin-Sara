@@ -3,8 +3,8 @@ import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 export async function POST(request) {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   try {
-    const { task, context } = await request.json();
-    const prompt = `TAREA: '${task}'\nCONTEXTO: '${context}'\n\nEres un Co-Ingeniero de Vida experto en desglosar tareas complejas en pasos accionables, simples y motivadores.
+    const { task, context, userName = "Sara" } = await request.json();
+    const prompt = `TAREA: '${task}'\nCONTEXTO: '${context}'\n\nEres un Co-Ingeniero de Vida experto en desglosar tareas complejas en pasos accionables, simples y motivadores para ${userName}.
     Si la tarea es demasiado vaga, pon "necesita_contexto": true y sugiere una "pregunta" para clarificar.
     Si es clara, devuelve "pasos" (array de strings).
     Devuelve SIEMPRE este JSON: {"necesita_contexto": boolean, "pregunta": string, "pasos": string[]}`;

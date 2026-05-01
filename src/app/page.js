@@ -246,7 +246,11 @@ function TabTareas({ xp, addXp, showToast, profile, isSara }) {
       const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task, context })
+        body: JSON.stringify({ 
+          task, 
+          context,
+          userName: profile.charAt(0).toUpperCase() + profile.slice(1)
+        })
       });
       const data = await res.json();
 
@@ -577,7 +581,11 @@ function TabJardin({ xp, addXp, showToast, globalMood, profile }) {
       const res = await fetch('/api/florist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: floristInput, existingPlants: ALL_PLANTS })
+        body: JSON.stringify({ 
+          input: floristInput, 
+          existingPlants: ALL_PLANTS,
+          userName: profile.charAt(0).toUpperCase() + profile.slice(1)
+        })
       });
       const data = await res.json();
       
@@ -877,7 +885,13 @@ function TabSaber({ addXp, showToast, profile }) {
   const loadMore = async () => {
     setLoadingMore(true);
     try {
-      const res = await fetch('/api/knowledge', { method: 'POST' });
+      const res = await fetch('/api/knowledge', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userName: profile.charAt(0).toUpperCase() + profile.slice(1)
+        })
+      });
       const data = await res.json();
       if (data.curiosities && data.curiosities.length > 0) {
         // Asignar IDs únicos a los nuevos datos
@@ -946,7 +960,12 @@ function TabDoctor({ showToast, globalMood, setGlobalMood, profile }) {
       const res = await fetch('/api/doctor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: msgs, mood: globalMood, contextoSuperacion: '' })
+        body: JSON.stringify({ 
+          messages: msgs, 
+          mood: globalMood, 
+          contextoSuperacion: '',
+          userName: profile.charAt(0).toUpperCase() + profile.slice(1)
+        })
       });
       const data = await res.json();
       if (data.response) {

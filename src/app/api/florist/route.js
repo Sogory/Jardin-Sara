@@ -3,9 +3,9 @@ import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Type } from "@google/gen
 export async function POST(request) {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   try {
-    const { input, existingPlants } = await request.json();
+    const { input, existingPlants, userName = "Sara" } = await request.json();
     
-    const prompt = `Eres Sogory, el místico florista del Jardín de Sara. Sara busca una flor basada en esto: "${input}".
+    const prompt = `Eres Sogory, el místico florista del Jardín de ${userName}. ${userName} busca una flor basada en esto: "${input}".
 Catálogo actual: ${existingPlants.map(p => p.name).join(', ')}.
 
 Tu trabajo es:
@@ -22,7 +22,7 @@ Responde SIEMPRE con este esquema JSON estricto.`;
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            msg: { type: Type.STRING, description: "Mensaje de Sogory para Sara" },
+            msg: { type: Type.STRING, description: `Mensaje de Sogory para ${userName}` },
             isNew: { type: Type.BOOLEAN },
             plantId: { type: Type.STRING },
             newPlant: {
@@ -53,9 +53,12 @@ Responde SIEMPRE con este esquema JSON estricto.`;
     return Response.json(data);
   } catch (error) {
     console.error("Florist API error:", error);
+    const { userName = "Sara" } = await (async () => {
+      try { return await request.clone().json(); } catch(e) { return {}; }
+    })();
     return Response.json({ 
       error: true,
-      msg: "Sogory está en el bosque buscando semillas, intenta de nuevo."
+      msg: `Sogory está en el bosque buscando semillas para ${userName}, intenta de nuevo.`
     });
   }
 }
