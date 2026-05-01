@@ -433,6 +433,24 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
         </>
       )}
 
+      <div className="section-label" onClick={() => setIsShopOpen(!isShopOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
+        <span>Tienda de flores {isShopOpen ? '▼' : '▶'}</span>
+        <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>{isShopOpen ? 'Toca para cerrar' : 'Toca para abrir'}</span>
+      </div>
+
+      {isShopOpen && (
+        <div className="shop-grid" style={{ animation: 'fadeIn 0.3s ease' }}>
+          {SHOP_PLANTS.map(p => (
+            <div key={p.id} className="shop-plant-card" onClick={() => buyPlant(p)}>
+              <span className="shop-emoji">{p.emoji}</span>
+              <div className="shop-name">{p.name}</div>
+              <div className="shop-cost">{p.cost} XP</div>
+              <div className="shop-desc">{p.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="card" style={{marginTop:'10px',background:'var(--bg2)',borderColor:'var(--blue)'}}>
         <div style={{fontSize:'12px',fontWeight:700,lineHeight:1.4,color:'var(--blue)'}}>
           👨‍🚀 ¡Hola! Te saluda Sogory Floreria33 a tu servicio
@@ -467,24 +485,6 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
           </div>
         )}
       </div>
-
-      <div className="section-label" onClick={() => setIsShopOpen(!isShopOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
-        <span>Tienda de flores {isShopOpen ? '▼' : '▶'}</span>
-        <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>{isShopOpen ? 'Toca para cerrar' : 'Toca para abrir'}</span>
-      </div>
-
-      {isShopOpen && (
-        <div className="shop-grid" style={{ animation: 'fadeIn 0.3s ease' }}>
-          {SHOP_PLANTS.map(p => (
-            <div key={p.id} className="shop-plant-card" onClick={() => buyPlant(p)}>
-              <span className="shop-emoji">{p.emoji}</span>
-              <div className="shop-name">{p.name}</div>
-              <div className="shop-cost">{p.cost} XP</div>
-              <div className="shop-desc">{p.desc}</div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {herbario.length > 0 && (
         <div style={{ marginTop: '20px' }}>
