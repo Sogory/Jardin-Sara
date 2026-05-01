@@ -325,6 +325,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   const [herbario, setHerbario] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isFloristOpen, setIsFloristOpen] = useState(false);
   const [floristMsg, setFloristMsg] = useState('¿Buscas algo especial hoy, Sara?');
   const [floristLoading, setFloristLoading] = useState(false);
   const [floristInput, setFloristInput] = useState('');
@@ -434,7 +435,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
       )}
 
       <div className="section-label" onClick={() => setIsShopOpen(!isShopOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
-        <span>Tienda de flores {isShopOpen ? '▼' : '▶'}</span>
+        <span>Catálogo de flores {isShopOpen ? '▼' : '▶'}</span>
         <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>{isShopOpen ? 'Toca para cerrar' : 'Toca para abrir'}</span>
       </div>
 
@@ -451,40 +452,47 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
         </div>
       )}
 
-      <div className="card" style={{marginTop:'10px',background:'var(--bg2)',borderColor:'var(--blue)'}}>
-        <div style={{fontSize:'12px',fontWeight:700,lineHeight:1.4,color:'var(--blue)'}}>
-          👨‍🚀 ¡Hola! Te saluda Sogory Floreria33 a tu servicio
-        </div>
-        <p style={{ fontSize: '12px', marginTop: '8px', marginBottom: '10px', lineHeight: '1.4' }}>{floristMsg}</p>
-
-        {!recommendedPlant ? (
-          <div className="input-row" style={{ marginBottom: 0 }}>
-            <input
-              value={floristInput}
-              onChange={e => setFloristInput(e.target.value)}
-              placeholder="Encarga tu flor"
-              style={{ fontSize: '12px', padding: '8px' }}
-            />
-            <button className="btn-blue" onClick={askFlorist} disabled={floristLoading} style={{ padding: '8px 12px' }}>
-              {floristLoading ? <span className="spinner" /> : 'Preguntar'}
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--bg)', padding: '10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
-            <span style={{ fontSize: '24px' }}>{recommendedPlant.emoji}</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '12px', fontWeight: 600 }}>{recommendedPlant.name}</div>
-              <div style={{ fontSize: '10px', color: 'var(--text3)' }}>{recommendedPlant.cost} XP</div>
-            </div>
-            <button className="btn-blue" onClick={() => { buyPlant(recommendedPlant); setRecommendedPlant(null); setFloristInput(''); }} style={{ padding: '6px 10px', fontSize: '11px' }}>
-              Adoptar
-            </button>
-            <button className="btn-outline" onClick={() => { setRecommendedPlant(null); setFloristInput(''); }} style={{ padding: '6px 10px', fontSize: '11px' }}>
-              ×
-            </button>
-          </div>
-        )}
+      <div className="section-label" onClick={() => setIsFloristOpen(!isFloristOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
+        <span>Floreria33 {isFloristOpen ? '▼' : '▶'}</span>
+        <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>{isFloristOpen ? 'Toca para cerrar' : 'Toca para abrir'}</span>
       </div>
+
+      {isFloristOpen && (
+        <div className="card" style={{marginTop:'10px',background:'var(--bg2)',borderColor:'var(--blue)', animation: 'fadeIn 0.3s ease'}}>
+          <div style={{fontSize:'12px',fontWeight:700,lineHeight:1.4,color:'var(--blue)'}}>
+            👨‍🚀 ¡Hola! Te saluda Sogory
+          </div>
+          <p style={{ fontSize: '12px', marginTop: '8px', marginBottom: '10px', lineHeight: '1.4' }}>{floristMsg}</p>
+
+          {!recommendedPlant ? (
+            <div className="input-row" style={{ marginBottom: 0 }}>
+              <input
+                value={floristInput}
+                onChange={e => setFloristInput(e.target.value)}
+                placeholder="Encarga tu flor"
+                style={{ fontSize: '12px', padding: '8px' }}
+              />
+              <button className="btn-blue" onClick={askFlorist} disabled={floristLoading} style={{ padding: '8px 12px' }}>
+                {floristLoading ? <span className="spinner" /> : 'Preguntar'}
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--bg)', padding: '10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+              <span style={{ fontSize: '24px' }}>{recommendedPlant.emoji}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '12px', fontWeight: 600 }}>{recommendedPlant.name}</div>
+                <div style={{ fontSize: '10px', color: 'var(--text3)' }}>{recommendedPlant.cost} XP</div>
+              </div>
+              <button className="btn-blue" onClick={() => { buyPlant(recommendedPlant); setRecommendedPlant(null); setFloristInput(''); }} style={{ padding: '6px 10px', fontSize: '11px' }}>
+                Adoptar
+              </button>
+              <button className="btn-outline" onClick={() => { setRecommendedPlant(null); setFloristInput(''); }} style={{ padding: '6px 10px', fontSize: '11px' }}>
+                ×
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {herbario.length > 0 && (
         <div style={{ marginTop: '20px' }}>
