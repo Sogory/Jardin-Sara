@@ -125,6 +125,7 @@ function TabTareas({ xp, addXp, showToast }) {
 
   const breakTask = async (task, context) => {
     setLoading(true);
+    setCelebration(null);
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
@@ -134,7 +135,7 @@ function TabTareas({ xp, addXp, showToast }) {
       const data = await res.json();
 
       if (data.error) {
-        showToast(data.message || 'La IA está descansando. Intenta en unos minutos.');
+        setCelebration('⏳ ' + (data.message || 'La IA está descansando. Intenta en 1 minuto.'));
       } else if (data.necesita_contexto && data.pregunta) {
         setNeedsContext(true);
         setContextQuestion(data.pregunta);
@@ -147,10 +148,10 @@ function TabTareas({ xp, addXp, showToast }) {
         setCelebration('🌱 Lo rompimos en pedacitos, Sara. ¡Empieza por el primero!');
         setTimeout(() => setCelebration(null), 3000);
       } else {
-        showToast('No se generaron pasos. Intenta otra vez.');
+        setCelebration('⏳ No se generaron pasos. Intenta otra vez en un momento.');
       }
     } catch (e) {
-      showToast('Error al procesar la tarea');
+      setCelebration('⏳ Error de conexión. Verifica tu internet e intenta otra vez.');
     }
     setLoading(false);
   };

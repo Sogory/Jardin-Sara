@@ -65,12 +65,15 @@ Si la tarea es vaga y necesitas más info:
     return Response.json(data);
   } catch (error) {
     console.error("Tasks API error:", error.message || error);
-    // Return a helpful fallback
+    const msg = String(error.message || "");
+    const isQuota = msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED") || msg.includes("quota");
     return Response.json({ 
       error: true,
-      message: error.message || "Error al procesar la tarea",
+      message: isQuota 
+        ? "La IA está descansando (límite temporal). Intenta en 1 minuto." 
+        : "Error al conectar con la IA. Intenta de nuevo.",
       necesita_contexto: false,
       pasos: []
-    }, { status: 200 }); // Return 200 so the client can handle it
+    }, { status: 200 });
   }
 }
