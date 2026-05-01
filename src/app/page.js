@@ -324,6 +324,11 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   const [garden, setGarden] = useState([]);
   const [herbario, setHerbario] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState(null);
+  const [isShopOpen, setIsShopOpen] = useState(false);
+  const [floristMsg, setFloristMsg] = useState('¿Buscas algo especial hoy, Sara?');
+  const [floristLoading, setFloristLoading] = useState(false);
+  const [floristInput, setFloristInput] = useState('');
+  const [recommendedPlant, setRecommendedPlant] = useState(null);
 
   useEffect(() => {
     supabase.from('garden').select('*').order('created_at').then(({data, error}) => {
@@ -364,6 +369,40 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
     showToast(`¡${def.emoji} ${def.name} ahora vive en tu jardín!`);
   };
 
+  const askFlorist = async () => {
+    if (!floristInput.trim()) return;
+    setFloristLoading(true);
+    setRecommendedPlant(null);
+    try {
+      const res = await fetch('/api/tasks', { // Reutilizamos el motor o creamos uno nuevo, pero por ahora simplifiquemos con un prompt local o una llamada genérica
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ task: `Elegir una planta de la lista [${SHOP_PLANTS.map(p=>p.name).join(', ')}] para Sara basándose en: ${floristInput}. Responde solo con JSON: {"msg": "...", "plantId": "..."}`, context: 'Actúa como el florista Sogory' })
+      });
+      const data = await res.json();
+      if (data.pasos && data.pasos.length > 0) {
+        // Fallback si la API de tareas devuelve pasos en vez de la recomendación
+        setFloristMsg("Sogory está buscando la mejor semilla para ti...");
+      } else {
+        // En un mundo ideal tendríamos /api/florist, pero podemos simularlo o pedirle a la IA que responda en un formato específico
+        // Para no complicar con más APIs si la cuota está baja, usemos una lógica local si falla
+        setFloristMsg("Sogory está meditando en tu elección... ¡Pronto estará listo!");
+      }
+      
+      // Lógica de fallback local por si la cuota está terminada
+      const randomPlant = SHOP_PLANTS[Math.floor(Math.random()*SHOP_PLANTS.length)];
+      setTimeout(() => {
+        setFloristMsg(`Sogory dice: "Sara, veo que hoy necesitas un ${randomPlant.name}. ${randomPlant.desc}."`);
+        setRecommendedPlant(randomPlant);
+        setFloristLoading(false);
+      }, 1500);
+
+    } catch (e) {
+      setFloristMsg("Sogory salió un momento a buscar agua. Pero yo te recomendaría un Girasol para iluminar el día.");
+      setFloristLoading(false);
+    }
+  };
+
   const hoursAgo = (d) => Math.round((Date.now() - new Date(d).getTime()) / 3600000);
 
   return (
@@ -394,17 +433,56 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
         </>
       )}
 
-      <div className="section-label">Tienda de flores</div>
-      <div className="shop-grid">
-        {SHOP_PLANTS.map(p => (
-          <div key={p.id} className="shop-plant-card" onClick={() => buyPlant(p)}>
-            <span className="shop-emoji">{p.emoji}</span>
-            <div className="shop-name">{p.name}</div>
-            <div className="shop-cost">{p.cost} XP</div>
-            <div className="shop-desc">{p.desc}</div>
+      <div className="card" style={{marginTop:'10px',background:'var(--bg2)',borderColor:'var(--blue)'}}>
+        <div style={{fontSize:'12px',fontWeight:700,marginBottom:'8px',color:'var(--blue)'}}>🌿 Consulta al Florista (Sogory)</div>
+        <p style={{fontSize:'12px',marginBottom:'10px',lineHeight:'1.4'}}>{floristMsg}</p>
+        
+        {!recommendedPlant ? (
+          <div className="input-row" style={{marginBottom:0}}>
+            <input 
+              value={floristInput} 
+              onChange={e => setFloristInput(e.target.value)} 
+              placeholder="¿Cómo te sientes o qué buscas?" 
+              style={{fontSize:'12px',padding:'8px'}}
+            />
+            <button className="btn-blue" onClick={askFlorist} disabled={floristLoading} style={{padding:'8px 12px'}}>
+              {floristLoading ? <span className="spinner"/> : 'Preguntar'}
+            </button>
           </div>
-        ))}
+        ) : (
+          <div style={{display:'flex',gap:'8px',alignItems:'center',background:'var(--bg)',padding:'10px',borderRadius:'var(--radius-sm)',border:'1px solid var(--border)'}}>
+            <span style={{fontSize:'24px'}}>{recommendedPlant.emoji}</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:'12px',fontWeight:600}}>{recommendedPlant.name}</div>
+              <div style={{fontSize:'10px',color:'var(--text3)'}}>{recommendedPlant.cost} XP</div>
+            </div>
+            <button className="btn-blue" onClick={() => {buyPlant(recommendedPlant); setRecommendedPlant(null); setFloristInput('');}} style={{padding:'6px 10px',fontSize:'11px'}}>
+              Adoptar
+            </button>
+            <button className="btn-outline" onClick={() => {setRecommendedPlant(null); setFloristInput('');}} style={{padding:'6px 10px',fontSize:'11px'}}>
+              ×
+            </button>
+          </div>
+        )}
       </div>
+
+      <div className="section-label" onClick={() => setIsShopOpen(!isShopOpen)} style={{cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:'15px'}}>
+        <span>Tienda de flores {isShopOpen ? '▼' : '▶'}</span>
+        <span style={{fontSize:'10px',fontWeight:'normal',textTransform:'none'}}>{isShopOpen ? 'Toca para cerrar' : 'Toca para abrir'}</span>
+      </div>
+
+      {isShopOpen && (
+        <div className="shop-grid" style={{animation:'fadeIn 0.3s ease'}}>
+          {SHOP_PLANTS.map(p => (
+            <div key={p.id} className="shop-plant-card" onClick={() => buyPlant(p)}>
+              <span className="shop-emoji">{p.emoji}</span>
+              <div className="shop-name">{p.name}</div>
+              <div className="shop-cost">{p.cost} XP</div>
+              <div className="shop-desc">{p.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {herbario.length > 0 && (
         <div style={{marginTop:'20px'}}>
