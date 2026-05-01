@@ -29,7 +29,7 @@ export async function POST(request) {
     console.error("Tasks API error:", error);
     return Response.json({ 
       error: true,
-      message: "La IA está descansando. Intenta de nuevo.",
+      message: "API Error: " + error.message,
       necesita_contexto: false,
       pasos: []
     });
