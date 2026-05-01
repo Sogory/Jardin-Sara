@@ -41,18 +41,22 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('tareas');
   const [xp, setXp] = useState(0);
   const [toast, setToast] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Mark as mounted (prevents hydration mismatch)
+  useEffect(() => { setMounted(true); }, []);
 
   // Load XP on mount
   useEffect(() => {
-    supabase.from('user_stats').select('xp_total').eq('id',1).single().then(({data}) => {
-      if (data) setXp(data.xp_total);
-    });
+    supabase.from('user_stats').select('xp_total').eq('id',1).single().then(({data, error}) => {
+      if (data && !error) setXp(data.xp_total);
+    }).catch(() => {});
   }, []);
 
   const addXp = useCallback(async (n) => {
     const newXp = xp + n;
     setXp(newXp);
-    await supabase.from('user_stats').update({xp_total: newXp}).eq('id',1);
+    try { await supabase.from('user_stats').update({xp_total: newXp}).eq('id',1); } catch(e) {}
   }, [xp]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2800); };
@@ -64,6 +68,9 @@ export default function Home() {
     {id:'doctor',icon:'💊',label:'Doctor'},
     {id:'logros',icon:'⭐',label:'Logros'}
   ];
+
+  // Prevent hydration mismatch - show nothing until mounted
+  if (!mounted) return <div id="app"><div className="hero"><span className="hero-icon">🌸</span><h1>Hola, Sara 🌸</h1><p>Cargando tu jardín...</p></div></div>;
 
   return (
     <div id="app">
@@ -244,9 +251,9 @@ function TabJardin({ xp, addXp, showToast }) {
   const [garden, setGarden] = useState([]);
 
   useEffect(() => {
-    supabase.from('garden').select('*').order('created_at').then(({data}) => {
-      if (data) setGarden(data);
-    });
+    supabase.from('garden').select('*').order('created_at').then(({data, error}) => {
+      if (data && !error) setGarden(data);
+    }).catch(() => {});
   }, []);
 
   const getStatus = (p) => {
@@ -329,8 +336,10 @@ function TabSaber({ addXp, showToast }) {
   const [readCurios, setReadCurios] = useState([]);
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('sara_read_curios') || '[]');
-    setReadCurios(saved);
+    try {
+      const saved = JSON.parse(localStorage.getItem('sara_read_curios') || '[]');
+      setReadCurios(saved);
+    } catch(e) {}
   }, []);
 
   const readCurio = (id) => {
@@ -483,9 +492,9 @@ function TabLogros({ addXp, showToast }) {
   const [logros, setLogros] = useState([]);
 
   useEffect(() => {
-    supabase.from('achievements').select('*').order('created_at', {ascending:false}).limit(20).then(({data}) => {
-      if (data) setLogros(data);
-    });
+    supabase.from('achievements').select('*').order('created_at', {ascending:false}).limit(20).then(({data, error}) => {
+      if (data && !error) setLogros(data);
+    }).catch(() => {});
   }, []);
 
   const celebrate = async () => {
