@@ -325,7 +325,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   const [herbario, setHerbario] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [floristMsg, setFloristMsg] = useState('¿Buscando señales de vida en este sector, Sara? Dime qué necesitas.');
+  const [floristMsg, setFloristMsg] = useState('¿Buscas algo especial hoy, Sara?');
   const [floristLoading, setFloristLoading] = useState(false);
   const [floristInput, setFloristInput] = useState('');
   const [recommendedPlant, setRecommendedPlant] = useState(null);
@@ -442,7 +442,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
             <input 
               value={floristInput} 
               onChange={e => setFloristInput(e.target.value)} 
-              placeholder="¿Cómo te sientes o qué buscas?" 
+              placeholder="¿Qué flor buscas hoy?" 
               style={{fontSize:'12px',padding:'8px'}}
             />
             <button className="btn-blue" onClick={askFlorist} disabled={floristLoading} style={{padding:'8px 12px'}}>
