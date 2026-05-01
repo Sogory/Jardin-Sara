@@ -330,6 +330,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   const [floristLoading, setFloristLoading] = useState(false);
   const [floristInput, setFloristInput] = useState('');
   const [recommendedPlant, setRecommendedPlant] = useState(null);
+  const [hiddenPlants, setHiddenPlants] = useState([]);
 
   useEffect(() => {
     supabase.from('garden').select('*').order('created_at').then(({ data, error }) => {
@@ -339,7 +340,20 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
     supabase.from('herbario').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
       if (data && !error) setHerbario(data);
     }).catch(() => { });
+
+    const storedHidden = JSON.parse(localStorage.getItem('hiddenPlants') || '[]');
+    setHiddenPlants(storedHidden);
   }, []);
+
+  const hidePlant = (plantId, e) => {
+    e.preventDefault();
+    if (confirm('¿Quieres ocultar esta flor para que no vuelva a aparecer en el catálogo?')) {
+      const newHidden = [...hiddenPlants, plantId];
+      setHiddenPlants(newHidden);
+      localStorage.setItem('hiddenPlants', JSON.stringify(newHidden));
+      showToast("Flor oculta. Ya no aparecerá.");
+    }
+  };
 
   const getStatus = (p) => {
     const def = SHOP_PLANTS.find(x => x.id === p.plant_type);
@@ -391,15 +405,20 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
       }
 
       // Lógica de fallback local por si la cuota está terminada
-      const randomPlant = SHOP_PLANTS[Math.floor(Math.random() * SHOP_PLANTS.length)];
+      const randomPlant = SHOP_PLANTS.filter(p => !hiddenPlants.includes(p.id))[Math.floor(Math.random() * SHOP_PLANTS.filter(p => !hiddenPlants.includes(p.id)).length)];
       setTimeout(() => {
-        setFloristMsg(`Sogory dice: "Sara, veo que hoy necesitas un ${randomPlant.name}. ${randomPlant.desc}."`);
-        setRecommendedPlant(randomPlant);
+        if(randomPlant) {
+          setFloristMsg(`Sogory dice: "Sara, veo que hoy necesitas un ${randomPlant.name}. ${randomPlant.desc}."`);
+          setRecommendedPlant(randomPlant);
+        } else {
+          setFloristMsg("No quedan plantas disponibles.");
+        }
         setFloristLoading(false);
       }, 1500);
 
     } catch (e) {
-      setFloristMsg("Sogory salió un momento a buscar agua. Pero yo te recomendaría un Girasol para iluminar el día.");
+      const fallbackPlant = SHOP_PLANTS.filter(p => !hiddenPlants.includes(p.id))[0] || SHOP_PLANTS[0];
+      setFloristMsg(`Sogory salió un momento a buscar agua. Pero yo te recomendaría un ${fallbackPlant?.name || 'Girasol'} para iluminar el día.`);
       setFloristLoading(false);
     }
   };
@@ -441,8 +460,8 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
 
       {isShopOpen && (
         <div className="shop-grid" style={{ animation: 'fadeIn 0.3s ease' }}>
-          {SHOP_PLANTS.map(p => (
-            <div key={p.id} className="shop-plant-card" onClick={() => buyPlant(p)}>
+          {SHOP_PLANTS.filter(p => !hiddenPlants.includes(p.id)).map(p => (
+            <div key={p.id} className="shop-plant-card" onClick={() => buyPlant(p)} onContextMenu={(e) => hidePlant(p.id, e)}>
               <span className="shop-emoji">{p.emoji}</span>
               <div className="shop-name">{p.name}</div>
               <div className="shop-cost">{p.cost} XP</div>
