@@ -4,36 +4,36 @@ import { supabase } from '@/lib/supabase';
 
 // ===== DATA =====
 const SHOP_PLANTS = [
-  {id:'peonia',emoji:'🌺',name:'Peonía',cost:40,desc:'Símbolo de prosperidad y sanación',waterEvery:24,waterCost:7},
-  {id:'lirio',emoji:'💐',name:'Lirio',cost:45,desc:'Pureza y renovación',waterEvery:20,waterCost:8},
-  {id:'granada',emoji:'🌹',name:'Flor de granada',cost:55,desc:'Fertilidad y abundancia',waterEvery:28,waterCost:9},
-  {id:'loto',emoji:'🪷',name:'Flor de loto',cost:70,desc:'Renace cada mañana del agua',waterEvery:16,waterCost:10},
-  {id:'tulipan',emoji:'🌷',name:'Tulipán',cost:35,desc:'Amor perfecto y nuevo comienzo',waterEvery:18,waterCost:6},
-  {id:'cactus',emoji:'🌵',name:'Cactus',cost:25,desc:'Resistente y noble, siempre ahí',waterEvery:48,waterCost:4},
-  {id:'suculenta',emoji:'🪴',name:'Suculenta',cost:30,desc:'Pequeña y tenaz',waterEvery:36,waterCost:5},
-  {id:'girasol',emoji:'🌻',name:'Girasol',cost:50,desc:'Siempre mirando al sol',waterEvery:22,waterCost:8}
+  { id: 'peonia', emoji: '🌺', name: 'Peonía', cost: 40, desc: 'Símbolo de prosperidad y sanación', waterEvery: 24, waterCost: 7 },
+  { id: 'lirio', emoji: '💐', name: 'Lirio', cost: 45, desc: 'Pureza y renovación', waterEvery: 20, waterCost: 8 },
+  { id: 'granada', emoji: '🌹', name: 'Flor de granada', cost: 55, desc: 'Fertilidad y abundancia', waterEvery: 28, waterCost: 9 },
+  { id: 'loto', emoji: '🪷', name: 'Flor de loto', cost: 70, desc: 'Renace cada mañana del agua', waterEvery: 16, waterCost: 10 },
+  { id: 'tulipan', emoji: '🌷', name: 'Tulipán', cost: 35, desc: 'Amor perfecto y nuevo comienzo', waterEvery: 18, waterCost: 6 },
+  { id: 'cactus', emoji: '🌵', name: 'Cactus', cost: 25, desc: 'Resistente y noble, siempre ahí', waterEvery: 48, waterCost: 4 },
+  { id: 'suculenta', emoji: '🪴', name: 'Suculenta', cost: 30, desc: 'Pequeña y tenaz', waterEvery: 36, waterCost: 5 },
+  { id: 'girasol', emoji: '🌻', name: 'Girasol', cost: 50, desc: 'Siempre mirando al sol', waterEvery: 22, waterCost: 8 }
 ];
 
 const CURIOSIDADES = [
-  {id:'c1',cat:'griegos',catColor:'#534AB7',emoji:'🏛️',title:'La peonía lleva el nombre de un dios',body:'Peón era el médico de los dioses olímpicos. Según el mito, usó la flor para sanar a Plutón de una herida. Por envidia, Asclepio intentó matarlo — y Zeus lo convirtió en la flor para protegerlo.'},
-  {id:'c2',cat:'plantas',catColor:'#0F6E56',emoji:'🪷',title:'El loto nunca toca el barro que lo nutre',body:'La flor de loto emerge limpia del fango cada mañana. Los egipcios la usaron como símbolo del sol y la resurrección.'},
-  {id:'c3',cat:'historia',catColor:'#993C1D',emoji:'🌍',title:'Los tulipanes casi arruinaron a Holanda',body:'En 1637, un solo bulbo de tulipán llegó a costar más que una casa en Ámsterdam. La fiebre especulativa se llamó Tulipomania.'},
-  {id:'c4',cat:'griegos',catColor:'#534AB7',emoji:'⚡',title:'Perséfone y la granada: el origen de las estaciones',body:'Cuando Perséfone comió seis semillas de granada en el inframundo, quedó atada a pasar seis meses bajo tierra. Cada primavera que vuelve, el mundo florece.'},
-  {id:'c5',cat:'plantas',catColor:'#0F6E56',emoji:'🌸',title:'Las peonías pueden vivir cien años',body:'Una peonía bien plantada puede florecer durante un siglo sin ser trasplantada. Sus raíces contienen paeoniflorina, usada para calmar la ansiedad.'},
-  {id:'c6',cat:'historia',catColor:'#993C1D',emoji:'🏺',title:'Los griegos creían que las flores pensaban',body:'Teofrasto escribió el primer tratado botánico del mundo. Describió más de 500 plantas y sostuvo que tenían una forma de alma vegetativa.'},
-  {id:'c7',cat:'griegos',catColor:'#534AB7',emoji:'🌿',title:'El lirio era la flor favorita de Hera',body:'Según el mito, los lirios nacieron de la leche que Hera derramó. Las gotas que cayeron al cielo formaron la Vía Láctea.'},
-  {id:'c8',cat:'plantas',catColor:'#0F6E56',emoji:'🌺',title:'Las flores se comunican por el suelo',body:'Las plantas emiten señales químicas a través de redes de hongos subterráneos llamadas micorrizas o "internet del bosque".'},
+  { id: 'c1', cat: 'griegos', catColor: '#534AB7', emoji: '🏛️', title: 'La peonía lleva el nombre de un dios', body: 'Peón era el médico de los dioses olímpicos. Según el mito, usó la flor para sanar a Plutón de una herida. Por envidia, Asclepio intentó matarlo — y Zeus lo convirtió en la flor para protegerlo.' },
+  { id: 'c2', cat: 'plantas', catColor: '#0F6E56', emoji: '🪷', title: 'El loto nunca toca el barro que lo nutre', body: 'La flor de loto emerge limpia del fango cada mañana. Los egipcios la usaron como símbolo del sol y la resurrección.' },
+  { id: 'c3', cat: 'historia', catColor: '#993C1D', emoji: '🌍', title: 'Los tulipanes casi arruinaron a Holanda', body: 'En 1637, un solo bulbo de tulipán llegó a costar más que una casa en Ámsterdam. La fiebre especulativa se llamó Tulipomania.' },
+  { id: 'c4', cat: 'griegos', catColor: '#534AB7', emoji: '⚡', title: 'Perséfone y la granada: el origen de las estaciones', body: 'Cuando Perséfone comió seis semillas de granada en el inframundo, quedó atada a pasar seis meses bajo tierra. Cada primavera que vuelve, el mundo florece.' },
+  { id: 'c5', cat: 'plantas', catColor: '#0F6E56', emoji: '🌸', title: 'Las peonías pueden vivir cien años', body: 'Una peonía bien plantada puede florecer durante un siglo sin ser trasplantada. Sus raíces contienen paeoniflorina, usada para calmar la ansiedad.' },
+  { id: 'c6', cat: 'historia', catColor: '#993C1D', emoji: '🏺', title: 'Los griegos creían que las flores pensaban', body: 'Teofrasto escribió el primer tratado botánico del mundo. Describió más de 500 plantas y sostuvo que tenían una forma de alma vegetativa.' },
+  { id: 'c7', cat: 'griegos', catColor: '#534AB7', emoji: '🌿', title: 'El lirio era la flor favorita de Hera', body: 'Según el mito, los lirios nacieron de la leche que Hera derramó. Las gotas que cayeron al cielo formaron la Vía Láctea.' },
+  { id: 'c8', cat: 'plantas', catColor: '#0F6E56', emoji: '🌺', title: 'Las flores se comunican por el suelo', body: 'Las plantas emiten señales químicas a través de redes de hongos subterráneos llamadas micorrizas o "internet del bosque".' },
 ];
 
-const MOODS = ["Cansada","Ansiosa","Triste","Sin motivación","Feliz","Estresada","Enojada"];
+const MOODS = ["Cansada", "Ansiosa", "Triste", "Sin motivación", "Feliz", "Estresada", "Enojada"];
 const PLACEHOLDERS = {
-  Feliz:"¿Qué encendió tu chispa hoy? Cuéntame ese destello...",
-  Ansiosa:"Sácalo todo aquí, vacía tu sistema... No hay juicio.",
-  Estresada:"Sácalo todo aquí, vacía tu sistema... No hay juicio.",
-  Enojada:"Sácalo todo aquí, vacía tu sistema... No hay juicio.",
-  Cansada:"Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
-  Triste:"Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
-  "Sin motivación":"Cuéntame qué te pesa, te escucho... Aquí puedes descansar."
+  Feliz: "¿Qué encendió tu chispa hoy? Cuéntame ese destello...",
+  Ansiosa: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+  Estresada: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+  Enojada: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+  Cansada: "Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
+  Triste: "Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
+  "Sin motivación": "Cuéntame qué te pesa, te escucho... Aquí puedes descansar."
 };
 
 // ===== MAIN APP =====
@@ -49,25 +49,25 @@ export default function Home() {
 
   // Load XP on mount
   useEffect(() => {
-    supabase.from('user_stats').select('xp_total').eq('id',1).single().then(({data, error}) => {
+    supabase.from('user_stats').select('xp_total').eq('id', 1).single().then(({ data, error }) => {
       if (data && !error) setXp(data.xp_total);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const addXp = useCallback(async (n) => {
     const newXp = xp + n;
     setXp(newXp);
-    try { await supabase.from('user_stats').update({xp_total: newXp}).eq('id',1); } catch(e) {}
+    try { await supabase.from('user_stats').update({ xp_total: newXp }).eq('id', 1); } catch (e) { }
   }, [xp]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2800); };
 
   const tabs = [
-    {id:'tareas',icon:'✏️',label:'Tareas'},
-    {id:'jardin',icon:'🌸',label:'Jardín'},
-    {id:'saber',icon:'✨',label:'Saber'},
-    {id:'doctor',icon:'💊',label:'Doctor'},
-    {id:'logros',icon:'⭐',label:'Logros'}
+    { id: 'tareas', icon: '✏️', label: 'Tareas' },
+    { id: 'jardin', icon: '🌸', label: 'Jardín' },
+    { id: 'saber', icon: '✨', label: 'Saber' },
+    { id: 'doctor', icon: '💊', label: 'Doctor' },
+    { id: 'logros', icon: '⭐', label: 'Logros' }
   ];
 
   // Prevent hydration mismatch - show nothing until mounted
@@ -85,7 +85,7 @@ export default function Home() {
       {/* XP Bar */}
       <div className="xp-row">
         <span className="xp-label">💧 XP</span>
-        <div className="xp-bar-wrap"><div className="xp-bar-fill" style={{width:`${xp%100}%`}}/></div>
+        <div className="xp-bar-wrap"><div className="xp-bar-fill" style={{ width: `${xp % 100}%` }} /></div>
         <span className="xp-val">{xp} XP</span>
       </div>
 
@@ -99,7 +99,7 @@ export default function Home() {
       {/* Bottom Nav */}
       <nav className="bottom-nav">
         {tabs.map(t => (
-          <button key={t.id} className={`nav-btn ${activeTab===t.id?'active':''}`} onClick={() => setActiveTab(t.id)}>
+          <button key={t.id} className={`nav-btn ${activeTab === t.id ? 'active' : ''}`} onClick={() => setActiveTab(t.id)}>
             <span className="nav-icon">{t.icon}</span>{t.label}
           </button>
         ))}
@@ -133,7 +133,7 @@ function TabTareas({ xp, addXp, showToast }) {
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task, context })
       });
       const data = await res.json();
@@ -189,8 +189,8 @@ function TabTareas({ xp, addXp, showToast }) {
       if (newCompleted.length === steps.length) {
         setCelebration('🎉 ¡Misión cumplida, Sara!');
       } else {
-        const msgs = ['✨ Ese es el 1%. Ya empezaste.','💪 Sigue a tu ritmo, Sara.','🌟 Cada pasito cuenta.','🎵 Pequeño logro, grande tú.'];
-        setCelebration(msgs[Math.floor(Math.random()*msgs.length)]);
+        const msgs = ['✨ Ese es el 1%. Ya empezaste.', '💪 Sigue a tu ritmo, Sara.', '🌟 Cada pasito cuenta.', '🎵 Pequeño logro, grande tú.'];
+        setCelebration(msgs[Math.floor(Math.random() * msgs.length)]);
         setTimeout(() => setCelebration(null), 3000);
       }
     }
@@ -216,22 +216,22 @@ function TabTareas({ xp, addXp, showToast }) {
       {!steps && !needsContext && !analogMode && (
         <>
           <div className="input-row">
-            <input value={taskInput} onChange={e => setTaskInput(e.target.value)} placeholder="¿Qué tarea tienes pendiente?" onKeyDown={e => e.key==='Enter' && taskInput && breakTask(taskInput)} />
+            <input value={taskInput} onChange={e => setTaskInput(e.target.value)} placeholder="¿Qué tarea tienes pendiente?" onKeyDown={e => e.key === 'Enter' && taskInput && breakTask(taskInput)} />
             <button className="btn-blue" onClick={() => taskInput && breakTask(taskInput)} disabled={loading}>
-              {loading ? <span className="spinner"/> : 'Romper'}
+              {loading ? <span className="spinner" /> : 'Romper'}
             </button>
           </div>
-          <div className="empty-state"><span className="empty-icon">💭</span>Escribe algo que te pese<br/>y lo rompemos en pedacitos.</div>
+          <div className="empty-state"><span className="empty-icon">💭</span>Escribe algo que te pese<br />y lo rompemos en pedacitos.</div>
         </>
       )}
 
       {/* Clarification */}
       {needsContext && (
         <div className="card">
-          <p style={{fontSize:'13px',marginBottom:'10px'}}>🤔 <strong>{contextQuestion}</strong></p>
-          <input className="input-field" value={contextAnswer} onChange={e => setContextAnswer(e.target.value)} placeholder="Ej: El escritorio, la cama..." style={{marginBottom:'8px'}} />
-          <button className="btn-blue" onClick={() => { if(contextAnswer) breakTask(originalTask, contextAnswer); }} disabled={loading} style={{width:'100%'}}>
-            {loading ? <span className="spinner"/> : 'Romper en pedacitos'}
+          <p style={{ fontSize: '13px', marginBottom: '10px' }}>🤔 <strong>{contextQuestion}</strong></p>
+          <input className="input-field" value={contextAnswer} onChange={e => setContextAnswer(e.target.value)} placeholder="Ej: El escritorio, la cama..." style={{ marginBottom: '8px' }} />
+          <button className="btn-blue" onClick={() => { if (contextAnswer) breakTask(originalTask, contextAnswer); }} disabled={loading} style={{ width: '100%' }}>
+            {loading ? <span className="spinner" /> : 'Romper en pedacitos'}
           </button>
         </div>
       )}
@@ -239,44 +239,44 @@ function TabTareas({ xp, addXp, showToast }) {
       {/* ===== MODO SOBERANO — Analog Fallback ===== */}
       {analogMode && (
         <div className="card">
-          <p style={{fontSize:'14px',fontWeight:700,marginBottom:'10px'}}>🧠 Modo Soberano — Rómpelo tú</p>
-          <p style={{fontSize:'12px',color:'var(--text2)',marginBottom:'12px',lineHeight:'1.6'}}>
+          <p style={{ fontSize: '14px', fontWeight: 700, marginBottom: '10px' }}>🧠 Modo Soberano — Rómpelo tú</p>
+          <p style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '12px', lineHeight: '1.6' }}>
             La IA descansa, pero tú no la necesitas. Usa esta fórmula:
           </p>
 
-          <div style={{background:'var(--bg2)',borderRadius:'var(--radius-sm)',padding:'12px',marginBottom:'12px'}}>
-            <p style={{fontSize:'12px',fontWeight:600,color:'var(--text)',marginBottom:'6px'}}>📋 Fórmula de 3 preguntas:</p>
-            <p style={{fontSize:'12px',color:'var(--text2)',lineHeight:'1.7'}}>
-              <strong>1.</strong> ¿Qué es lo PRIMERO que toco con las manos?<br/>
-              <strong>2.</strong> ¿Qué hago DESPUÉS con eso?<br/>
+          <div style={{ background: 'var(--bg2)', borderRadius: 'var(--radius-sm)', padding: '12px', marginBottom: '12px' }}>
+            <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', marginBottom: '6px' }}>📋 Fórmula de 3 preguntas:</p>
+            <p style={{ fontSize: '12px', color: 'var(--text2)', lineHeight: '1.7' }}>
+              <strong>1.</strong> ¿Qué es lo PRIMERO que toco con las manos?<br />
+              <strong>2.</strong> ¿Qué hago DESPUÉS con eso?<br />
               <strong>3.</strong> ¿Cómo sé que TERMINÉ?
             </p>
           </div>
 
-          <p style={{fontSize:'12px',fontWeight:600,color:'var(--text)',marginBottom:'8px'}}>
-            Tu tarea: <em style={{color:'var(--blue)'}}>{originalTask}</em>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>
+            Tu tarea: <em style={{ color: 'var(--blue)' }}>{originalTask}</em>
           </p>
 
-          <div style={{display:'flex',flexDirection:'column',gap:'6px',marginBottom:'10px'}}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px' }}>
             {manualSteps.map((s, i) => (
-              <div key={i} style={{display:'flex',gap:'6px',alignItems:'center'}}>
-                <span style={{fontSize:'11px',color:'var(--text3)',minWidth:'18px'}}>{i+1}.</span>
+              <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text3)', minWidth: '18px' }}>{i + 1}.</span>
                 <input
                   className="input-field"
                   value={s}
                   onChange={e => updateManualStep(i, e.target.value)}
-                  placeholder={i===0 ? 'Lo primero que toco...' : i===manualSteps.length-1 ? 'Así sé que terminé...' : 'Después hago...'}
-                  style={{fontSize:'13px',padding:'8px 10px'}}
+                  placeholder={i === 0 ? 'Lo primero que toco...' : i === manualSteps.length - 1 ? 'Así sé que terminé...' : 'Después hago...'}
+                  style={{ fontSize: '13px', padding: '8px 10px' }}
                 />
               </div>
             ))}
           </div>
 
-          <div style={{display:'flex',gap:'6px'}}>
-            <button className="btn-outline" onClick={addManualStep} style={{fontSize:'11px',padding:'7px 12px'}}>+ Paso</button>
-            <button className="btn-blue" onClick={startManualSteps} style={{flex:1}}>¡Empezar!</button>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button className="btn-outline" onClick={addManualStep} style={{ fontSize: '11px', padding: '7px 12px' }}>+ Paso</button>
+            <button className="btn-blue" onClick={startManualSteps} style={{ flex: 1 }}>¡Empezar!</button>
           </div>
-          <button className="btn-outline" onClick={resetAll} style={{width:'100%',marginTop:'8px',fontSize:'11px'}}>← Volver</button>
+          <button className="btn-outline" onClick={resetAll} style={{ width: '100%', marginTop: '8px', fontSize: '11px' }}>← Volver</button>
         </div>
       )}
 
@@ -292,23 +292,23 @@ function TabTareas({ xp, addXp, showToast }) {
           </div>
           <div className="steps-list">
             {steps.map((s, i) => (
-              <div key={i} className={`step-item ${completedSteps.includes(i)?'done':''} ${i>stepIndex?'locked':''}`} onClick={() => toggleStep(i)}>
-                <div className="step-check">{completedSteps.includes(i)?'✓':''}</div>
+              <div key={i} className={`step-item ${completedSteps.includes(i) ? 'done' : ''} ${i > stepIndex ? 'locked' : ''}`} onClick={() => toggleStep(i)}>
+                <div className="step-check">{completedSteps.includes(i) ? '✓' : ''}</div>
                 <span>{s}</span>
               </div>
             ))}
           </div>
-          <div className="task-prog"><div className="task-prog-fill" style={{width:`${pct}%`}}/></div>
+          <div className="task-prog"><div className="task-prog-fill" style={{ width: `${pct}%` }} /></div>
 
           {allDone && (
-            <div style={{marginTop:'12px',textAlign:'center'}}>
-              <p style={{fontSize:'14px',fontWeight:600,marginBottom:'8px'}}>🌟 ¡Misión cumplida, Sara!</p>
-              <button className="btn-blue" onClick={finishTask} style={{width:'100%'}}>Terminar tarea y ganar 25 XP</button>
+            <div style={{ marginTop: '12px', textAlign: 'center' }}>
+              <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>🌟 ¡Misión cumplida, Sara!</p>
+              <button className="btn-blue" onClick={finishTask} style={{ width: '100%' }}>Terminar tarea y ganar 25 XP</button>
             </div>
           )}
 
           {!allDone && (
-            <button className="btn-outline" onClick={resetAll} style={{width:'100%',marginTop:'8px',fontSize:'11px'}}>
+            <button className="btn-outline" onClick={resetAll} style={{ width: '100%', marginTop: '8px', fontSize: '11px' }}>
               Cancelar tarea
             </button>
           )}
@@ -331,13 +331,13 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   const [recommendedPlant, setRecommendedPlant] = useState(null);
 
   useEffect(() => {
-    supabase.from('garden').select('*').order('created_at').then(({data, error}) => {
+    supabase.from('garden').select('*').order('created_at').then(({ data, error }) => {
       if (data && !error) setGarden(data);
-    }).catch(() => {});
-    
-    supabase.from('herbario').select('*').order('created_at', {ascending: false}).then(({data, error}) => {
+    }).catch(() => { });
+
+    supabase.from('herbario').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
       if (data && !error) setHerbario(data);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const getStatus = (p) => {
@@ -355,8 +355,8 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
     if (xp < def.waterCost) { showToast(`Necesitas ${def.waterCost} XP para regar 💧`); return; }
     const newHealth = Math.min(100, plant.health + 35);
     await addXp(-def.waterCost);
-    await supabase.from('garden').update({health: newHealth, last_watered: new Date().toISOString()}).eq('id', plant.id);
-    setGarden(g => g.map(p => p.id === plant.id ? {...p, health: newHealth, last_watered: new Date().toISOString()} : p));
+    await supabase.from('garden').update({ health: newHealth, last_watered: new Date().toISOString() }).eq('id', plant.id);
+    setGarden(g => g.map(p => p.id === plant.id ? { ...p, health: newHealth, last_watered: new Date().toISOString() } : p));
     showToast(`💧 ${plant.name} te lo agradece, Sara.`);
   };
 
@@ -364,7 +364,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
     if (xp < def.cost) { showToast(`Necesitas ${def.cost} XP para esta flor 💧`); return; }
     if (garden.length >= 8) { showToast('Tu jardín está lleno 🌿'); return; }
     await addXp(-def.cost);
-    const {data} = await supabase.from('garden').insert({name: def.name, plant_type: def.id, health: 100, last_watered: new Date().toISOString()}).select().single();
+    const { data } = await supabase.from('garden').insert({ name: def.name, plant_type: def.id, health: 100, last_watered: new Date().toISOString() }).select().single();
     if (data) setGarden([...garden, data]);
     showToast(`¡${def.emoji} ${def.name} ahora vive en tu jardín!`);
   };
@@ -376,8 +376,8 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
     try {
       const res = await fetch('/api/tasks', { // Reutilizamos el motor o creamos uno nuevo, pero por ahora simplifiquemos con un prompt local o una llamada genérica
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ task: `Elegir una planta de la lista [${SHOP_PLANTS.map(p=>p.name).join(', ')}] para Sara basándose en: ${floristInput}. Responde solo con JSON: {"msg": "...", "plantId": "..."}`, context: 'Actúa como el florista Sogory' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task: `Elegir una planta de la lista [${SHOP_PLANTS.map(p => p.name).join(', ')}] para Sara basándose en: ${floristInput}. Responde solo con JSON: {"msg": "...", "plantId": "..."}`, context: 'Actúa como el florista Sogory' })
       });
       const data = await res.json();
       if (data.pasos && data.pasos.length > 0) {
@@ -388,9 +388,9 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
         // Para no complicar con más APIs si la cuota está baja, usemos una lógica local si falla
         setFloristMsg("Sogory está meditando en tu elección... ¡Pronto estará listo!");
       }
-      
+
       // Lógica de fallback local por si la cuota está terminada
-      const randomPlant = SHOP_PLANTS[Math.floor(Math.random()*SHOP_PLANTS.length)];
+      const randomPlant = SHOP_PLANTS[Math.floor(Math.random() * SHOP_PLANTS.length)];
       setTimeout(() => {
         setFloristMsg(`Sogory dice: "Sara, veo que hoy necesitas un ${randomPlant.name}. ${randomPlant.desc}."`);
         setRecommendedPlant(randomPlant);
@@ -408,7 +408,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   return (
     <div className="section active">
       {garden.length === 0 ? (
-        <div className="empty-state"><span className="empty-icon">🪴</span>Tu jardín espera, Sara.<br/>Gana XP y adopta tu primera flor.</div>
+        <div className="empty-state"><span className="empty-icon">🪴</span>Tu jardín espera, Sara.<br />Gana XP y adopta tu primera flor.</div>
       ) : (
         <>
           <div className="section-label">Tu jardín</div>
@@ -422,7 +422,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
                   <span className="plant-big-emoji">{def?.emoji || '🌱'}</span>
                   <div className="plant-card-name">{p.name}</div>
                   <div className="plant-card-time">regada hace {hoursAgo(p.last_watered)}h</div>
-                  <div className="health-bar-wrap"><div className="health-bar-fill" style={{width:`${p.health}%`,background:hColor}}/></div>
+                  <div className="health-bar-wrap"><div className="health-bar-fill" style={{ width: `${p.health}%`, background: hColor }} /></div>
                   <button className="water-btn" onClick={(e) => { e.stopPropagation(); setSelectedPlant(p); }}>
                     Cuidar 🌱
                   </button>
@@ -435,47 +435,46 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
 
       <div className="card" style={{marginTop:'10px',background:'var(--bg2)',borderColor:'var(--blue)'}}>
         <div style={{fontSize:'12px',fontWeight:700,lineHeight:1.4,color:'var(--blue)'}}>
-          👨‍🚀 ¡Hola! Te saluda Sogory<br/>
-          Floreria33 a su servicio
+          👨‍🚀 ¡Hola! Te saluda Sogory Floreria33 a tu servicio
         </div>
-        <p style={{fontSize:'12px',marginTop:'8px',marginBottom:'10px',lineHeight:'1.4'}}>{floristMsg}</p>
-        
+        <p style={{ fontSize: '12px', marginTop: '8px', marginBottom: '10px', lineHeight: '1.4' }}>{floristMsg}</p>
+
         {!recommendedPlant ? (
-          <div className="input-row" style={{marginBottom:0}}>
-            <input 
-              value={floristInput} 
-              onChange={e => setFloristInput(e.target.value)} 
-              placeholder="Encarga tu flor" 
-              style={{fontSize:'12px',padding:'8px'}}
+          <div className="input-row" style={{ marginBottom: 0 }}>
+            <input
+              value={floristInput}
+              onChange={e => setFloristInput(e.target.value)}
+              placeholder="Encarga tu flor"
+              style={{ fontSize: '12px', padding: '8px' }}
             />
-            <button className="btn-blue" onClick={askFlorist} disabled={floristLoading} style={{padding:'8px 12px'}}>
-              {floristLoading ? <span className="spinner"/> : 'Preguntar'}
+            <button className="btn-blue" onClick={askFlorist} disabled={floristLoading} style={{ padding: '8px 12px' }}>
+              {floristLoading ? <span className="spinner" /> : 'Preguntar'}
             </button>
           </div>
         ) : (
-          <div style={{display:'flex',gap:'8px',alignItems:'center',background:'var(--bg)',padding:'10px',borderRadius:'var(--radius-sm)',border:'1px solid var(--border)'}}>
-            <span style={{fontSize:'24px'}}>{recommendedPlant.emoji}</span>
-            <div style={{flex:1}}>
-              <div style={{fontSize:'12px',fontWeight:600}}>{recommendedPlant.name}</div>
-              <div style={{fontSize:'10px',color:'var(--text3)'}}>{recommendedPlant.cost} XP</div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--bg)', padding: '10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+            <span style={{ fontSize: '24px' }}>{recommendedPlant.emoji}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '12px', fontWeight: 600 }}>{recommendedPlant.name}</div>
+              <div style={{ fontSize: '10px', color: 'var(--text3)' }}>{recommendedPlant.cost} XP</div>
             </div>
-            <button className="btn-blue" onClick={() => {buyPlant(recommendedPlant); setRecommendedPlant(null); setFloristInput('');}} style={{padding:'6px 10px',fontSize:'11px'}}>
+            <button className="btn-blue" onClick={() => { buyPlant(recommendedPlant); setRecommendedPlant(null); setFloristInput(''); }} style={{ padding: '6px 10px', fontSize: '11px' }}>
               Adoptar
             </button>
-            <button className="btn-outline" onClick={() => {setRecommendedPlant(null); setFloristInput('');}} style={{padding:'6px 10px',fontSize:'11px'}}>
+            <button className="btn-outline" onClick={() => { setRecommendedPlant(null); setFloristInput(''); }} style={{ padding: '6px 10px', fontSize: '11px' }}>
               ×
             </button>
           </div>
         )}
       </div>
 
-      <div className="section-label" onClick={() => setIsShopOpen(!isShopOpen)} style={{cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:'15px'}}>
+      <div className="section-label" onClick={() => setIsShopOpen(!isShopOpen)} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
         <span>Tienda de flores {isShopOpen ? '▼' : '▶'}</span>
-        <span style={{fontSize:'10px',fontWeight:'normal',textTransform:'none'}}>{isShopOpen ? 'Toca para cerrar' : 'Toca para abrir'}</span>
+        <span style={{ fontSize: '10px', fontWeight: 'normal', textTransform: 'none' }}>{isShopOpen ? 'Toca para cerrar' : 'Toca para abrir'}</span>
       </div>
 
       {isShopOpen && (
-        <div className="shop-grid" style={{animation:'fadeIn 0.3s ease'}}>
+        <div className="shop-grid" style={{ animation: 'fadeIn 0.3s ease' }}>
           {SHOP_PLANTS.map(p => (
             <div key={p.id} className="shop-plant-card" onClick={() => buyPlant(p)}>
               <span className="shop-emoji">{p.emoji}</span>
@@ -488,17 +487,17 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
       )}
 
       {herbario.length > 0 && (
-        <div style={{marginTop:'20px'}}>
-          <div className="section-label" style={{display:'flex',alignItems:'center',gap:'6px'}}>
+        <div style={{ marginTop: '20px' }}>
+          <div className="section-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             🏺 Herbario de la Memoria
           </div>
-          <div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {herbario.map(h => (
               <div key={h.id} className="log-entry">
-                <div className="log-icon" style={{fontSize:'24px'}}>{h.emoji || '🌱'}</div>
+                <div className="log-icon" style={{ fontSize: '24px' }}>{h.emoji || '🌱'}</div>
                 <div className="log-text">
-                  <strong style={{color:'var(--text)',fontSize:'14px'}}>{h.name}</strong>
-                  <div style={{marginTop:'4px',lineHeight:1.4,color:'var(--text2)'}}>
+                  <strong style={{ color: 'var(--text)', fontSize: '14px' }}>{h.name}</strong>
+                  <div style={{ marginTop: '4px', lineHeight: 1.4, color: 'var(--text2)' }}>
                     {h.relato_vida}
                   </div>
                 </div>
@@ -509,8 +508,8 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
       )}
 
       {/* MODAL TAMAGOTCHI */}
-      {selectedPlant && <TamagotchiModal 
-        plant={selectedPlant} 
+      {selectedPlant && <TamagotchiModal
+        plant={selectedPlant}
         onClose={() => setSelectedPlant(null)}
         xp={xp} addXp={addXp} showToast={showToast}
         globalMood={globalMood}
@@ -526,7 +525,7 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
   const emoji = def.emoji || '🌱';
   const name = plant.name || 'Planta Misteriosa';
   const hoursPassed = (Date.now() - new Date(plant.last_watered).getTime()) / 3600000;
-  
+
   let statusMsg = "";
   if (globalMood === "Triste") statusMsg = "Mis espinas hoy son tu escudo, Sara. Respira conmigo.";
   else if (globalMood === "Feliz") statusMsg = "¡Qué rico solecito! Estoy vibrando con tu alegría.";
@@ -546,7 +545,7 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
     const cost = def.waterCost || 5;
     if (plant.health <= 0) { showToast("El agua no es suficiente. ¡Necesita abono!"); return; }
     if (xp < cost) { showToast(`Necesitas ${cost} XP para regar 💧`); return; }
-    
+
     if (["Ansiosa", "Estresada", "Enojada", "Triste"].includes(globalMood)) {
       showToast(`🧘 Micro-Ritual: Refresca tu mente como a tu ${name}.`);
     } else {
@@ -555,14 +554,14 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
 
     const newHealth = 100;
     await addXp(-cost);
-    await supabase.from('garden').update({health: newHealth, last_watered: new Date().toISOString()}).eq('id', plant.id);
-    setGarden(g => g.map(p => p.id === plant.id ? {...p, health: newHealth, last_watered: new Date().toISOString()} : p));
+    await supabase.from('garden').update({ health: newHealth, last_watered: new Date().toISOString() }).eq('id', plant.id);
+    setGarden(g => g.map(p => p.id === plant.id ? { ...p, health: newHealth, last_watered: new Date().toISOString() } : p));
     setTimeout(onClose, 1500);
   };
 
   const handleAbono = async () => {
     if (xp < 15) { showToast("Necesitas 15 XP para el Abono ✨"); return; }
-    
+
     if (["Ansiosa", "Estresada", "Enojada", "Triste"].includes(globalMood)) {
       showToast(`✨ Micro-Ritual: Paciencia. Todo crece a su ritmo.`);
     } else {
@@ -571,8 +570,8 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
 
     await addXp(-15);
     const newHealth = 100;
-    await supabase.from('garden').update({health: newHealth, last_watered: new Date().toISOString()}).eq('id', plant.id);
-    setGarden(g => g.map(p => p.id === plant.id ? {...p, health: newHealth, last_watered: new Date().toISOString()} : p));
+    await supabase.from('garden').update({ health: newHealth, last_watered: new Date().toISOString() }).eq('id', plant.id);
+    setGarden(g => g.map(p => p.id === plant.id ? { ...p, health: newHealth, last_watered: new Date().toISOString() } : p));
     setTimeout(onClose, 1500);
   };
 
@@ -582,19 +581,19 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
         name, emoji,
         relato_vida: `Cuidada con amor hasta su trasplante el ${new Date().toLocaleDateString()}.`
       }).select().single();
-      
+
       if (data) {
         setHerbario(h => [data, ...h]);
       }
-      
+
       await supabase.from('achievements').insert({ description: `Trasplantaste tu ${name} al Herbario.`, xp: 10 });
       await addXp(10);
       await supabase.from('garden').delete().eq('id', plant.id);
-      
+
       setGarden(g => g.filter(p => p.id !== plant.id));
       showToast("¡Trasplantada con éxito al Herbario! +10 XP");
       onClose();
-    } catch(e) {
+    } catch (e) {
       showToast("Error al trasplantar. ¿Existe la tabla herbario?");
     }
   };
@@ -603,28 +602,28 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>×</button>
-        <div style={{textAlign:'center'}}>
-          <div style={{fontSize:'80px',lineHeight:1,marginBottom:'10px'}}>{emoji}</div>
-          <h3 style={{margin:0,fontSize:'22px'}}>{name}</h3>
-          
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '80px', lineHeight: 1, marginBottom: '10px' }}>{emoji}</div>
+          <h3 style={{ margin: 0, fontSize: '22px' }}>{name}</h3>
+
           <div className="modal-bubble">💭 "{statusMsg}"</div>
-          
-          <div style={{marginBottom:'20px'}}>
-            <span style={{fontSize:'40px'}}>{heart}</span>
-            <p style={{fontSize:'12px',color:'var(--text3)',marginTop:'5px'}}>
+
+          <div style={{ marginBottom: '20px' }}>
+            <span style={{ fontSize: '40px' }}>{heart}</span>
+            <p style={{ fontSize: '12px', color: 'var(--text3)', marginTop: '5px' }}>
               Salud: {Math.round(plant.health)}% | Riego: hace {Math.floor(hoursPassed)}h {Math.round((hoursPassed % 1) * 60)}m
             </p>
           </div>
-          
-          <div style={{display:'flex',gap:'8px'}}>
-            <button className={plant.health > 0 ? "btn-blue" : "btn-outline"} style={{flex:1,padding:'12px'}} onClick={handleWater}>
-              Regar 🚿<br/><span style={{fontSize:'10px',fontWeight:'normal'}}>{def.waterCost||5} XP</span>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className={plant.health > 0 ? "btn-blue" : "btn-outline"} style={{ flex: 1, padding: '12px' }} onClick={handleWater}>
+              Regar 🚿<br /><span style={{ fontSize: '10px', fontWeight: 'normal' }}>{def.waterCost || 5} XP</span>
             </button>
-            <button className="btn-outline" style={{flex:1,padding:'12px',borderColor:'#fbc02d',color:'#fbc02d'}} onClick={handleAbono}>
-              Abono ✨<br/><span style={{fontSize:'10px',fontWeight:'normal'}}>15 XP</span>
+            <button className="btn-outline" style={{ flex: 1, padding: '12px', borderColor: '#fbc02d', color: '#fbc02d' }} onClick={handleAbono}>
+              Abono ✨<br /><span style={{ fontSize: '10px', fontWeight: 'normal' }}>15 XP</span>
             </button>
-            <button className="btn-outline" style={{flex:1,padding:'12px'}} onClick={handleHerbario} title="Trasplantar al Herbario">
-              🏺<br/><span style={{fontSize:'10px',fontWeight:'normal'}}>Herbario</span>
+            <button className="btn-outline" style={{ flex: 1, padding: '12px' }} onClick={handleHerbario} title="Trasplantar al Herbario">
+              🏺<br /><span style={{ fontSize: '10px', fontWeight: 'normal' }}>Herbario</span>
             </button>
           </div>
         </div>
@@ -647,7 +646,7 @@ function TabSaber({ addXp, showToast }) {
       // Solo cargar las que no se han leído
       const unreadStatic = CURIOSIDADES.filter(c => !saved.includes(c.id));
       setLocalCurios(unreadStatic);
-    } catch(e) {}
+    } catch (e) { }
   }, []);
 
   const readCurio = (id) => {
@@ -655,10 +654,10 @@ function TabSaber({ addXp, showToast }) {
     const newRead = [...readCurios, id];
     setReadCurios(newRead);
     localStorage.setItem('sara_read_curios', JSON.stringify(newRead));
-    
+
     // Quitar de la pantalla
     setLocalCurios(prev => prev.filter(c => c.id !== id));
-    
+
     addXp(15);
     showToast('✨ +15 XP — el saber también riega el jardín.');
   };
@@ -670,7 +669,7 @@ function TabSaber({ addXp, showToast }) {
       const data = await res.json();
       if (data.curiosities && data.curiosities.length > 0) {
         // Asignar IDs únicos a los nuevos datos
-        const newCurios = data.curiosities.map(c => ({...c, id: 'ai_' + Math.random().toString(36).substr(2, 9)}));
+        const newCurios = data.curiosities.map(c => ({ ...c, id: 'ai_' + Math.random().toString(36).substr(2, 9) }));
         setLocalCurios(prev => [...prev, ...newCurios]);
         showToast('✨ El universo te ha enviado más curiosidades.');
       } else {
@@ -682,30 +681,30 @@ function TabSaber({ addXp, showToast }) {
     setLoadingMore(false);
   };
 
-  const cats = ['todos','griegos','plantas','historia'];
-  const catLabels = {griegos:'Griegos',plantas:'Plantas',historia:'Historia'};
+  const cats = ['todos', 'griegos', 'plantas', 'historia'];
+  const catLabels = { griegos: 'Griegos', plantas: 'Plantas', historia: 'Historia' };
   const filtered = activeCat === 'todos' ? localCurios : localCurios.filter(c => c.cat === activeCat);
 
   return (
     <div className="section active">
-      <div style={{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}}>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
         {cats.map(c => (
-          <button key={c} className={`curiosity-xp-btn ${activeCat===c?'':'earned'}`} onClick={() => setActiveCat(c)} style={activeCat===c?{background:'var(--blue)',color:'white',borderColor:'var(--blue)'}:{}}>
+          <button key={c} className={`curiosity-xp-btn ${activeCat === c ? '' : 'earned'}`} onClick={() => setActiveCat(c)} style={activeCat === c ? { background: 'var(--blue)', color: 'white', borderColor: 'var(--blue)' } : {}}>
             {c === 'todos' ? 'Todos' : catLabels[c]}
           </button>
         ))}
       </div>
-      
+
       {filtered.length === 0 && (
-        <div className="empty-state" style={{marginTop:'20px'}}>
+        <div className="empty-state" style={{ marginTop: '20px' }}>
           <span className="empty-icon">📖</span>
-          Has leído todo por ahora.<br/>Pide más conocimiento al universo.
+          Has leído todo por ahora.<br />Pide más conocimiento al universo.
         </div>
       )}
 
       {filtered.map(c => (
         <div key={c.id} className="curiosity-card">
-          <div className="curiosity-cat" style={{color:c.catColor}}>{c.emoji} {catLabels[c.cat]||c.cat}</div>
+          <div className="curiosity-cat" style={{ color: c.catColor }}>{c.emoji} {catLabels[c.cat] || c.cat}</div>
           <div className="curiosity-title">{c.title}</div>
           <div className="curiosity-body">{c.body}</div>
           <div className="curiosity-xp-btn" onClick={() => readCurio(c.id)}>
@@ -714,8 +713,8 @@ function TabSaber({ addXp, showToast }) {
         </div>
       ))}
 
-      <button className="btn-outline" onClick={loadMore} disabled={loadingMore} style={{width:'100%', marginTop:'15px', padding:'15px'}}>
-        {loadingMore ? <span className="spinner"/> : '✨ Pedir más datos al universo'}
+      <button className="btn-outline" onClick={loadMore} disabled={loadingMore} style={{ width: '100%', marginTop: '15px', padding: '15px' }}>
+        {loadingMore ? <span className="spinner" /> : '✨ Pedir más datos al universo'}
       </button>
     </div>
   );
@@ -734,12 +733,12 @@ function TabDoctor({ showToast, globalMood, setGlobalMood }) {
     try {
       const res = await fetch('/api/doctor', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: msgs, mood: globalMood, contextoSuperacion: '' })
       });
       const data = await res.json();
       if (data.response) {
-        const newMsgs = [...msgs, {role:'assistant', content: data.response}];
+        const newMsgs = [...msgs, { role: 'assistant', content: data.response }];
         setMessages(newMsgs);
       }
     } catch (e) {
@@ -755,9 +754,9 @@ function TabDoctor({ showToast, globalMood, setGlobalMood }) {
       await supabase.from('registro_emocional_eje_gi').insert({
         emocion: globalMood, relato_usuario: relato, es_momento_luz: globalMood === 'Feliz'
       });
-    } catch(e) {}
+    } catch (e) { }
 
-    const firstMsg = [{role:'user', content: `Me siento ${globalMood}. ${relato}`}];
+    const firstMsg = [{ role: 'user', content: `Me siento ${globalMood}. ${relato}` }];
     setMessages(firstMsg);
     setActive(true);
     await sendToDoctor(firstMsg);
@@ -765,7 +764,7 @@ function TabDoctor({ showToast, globalMood, setGlobalMood }) {
 
   const sendFollowUp = async () => {
     if (!followUp.trim()) return;
-    const newMsgs = [...messages, {role:'user', content: followUp}];
+    const newMsgs = [...messages, { role: 'user', content: followUp }];
     setMessages(newMsgs);
     setFollowUp('');
     await sendToDoctor(newMsgs);
@@ -781,43 +780,43 @@ function TabDoctor({ showToast, globalMood, setGlobalMood }) {
   return (
     <div className="section active">
       {/* Mood selector */}
-      <select className="select-field" value={globalMood} onChange={e => setGlobalMood(e.target.value)} style={{marginBottom:'10px'}}>
+      <select className="select-field" value={globalMood} onChange={e => setGlobalMood(e.target.value)} style={{ marginBottom: '10px' }}>
         {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
       </select>
 
       {/* Initial text area */}
       {!active && (
         <>
-          <textarea className="textarea-field" value={relato} onChange={e => setRelato(e.target.value)} placeholder={PLACEHOLDERS[globalMood]} style={{marginBottom:'10px'}} />
-          <button className="btn-blue" onClick={startConversation} disabled={loading} style={{width:'100%'}}>
-            {loading ? <span className="spinner"/> : 'Iniciar Conversatorio'}
+          <textarea className="textarea-field" value={relato} onChange={e => setRelato(e.target.value)} placeholder={PLACEHOLDERS[globalMood]} style={{ marginBottom: '10px' }} />
+          <button className="btn-blue" onClick={startConversation} disabled={loading} style={{ width: '100%' }}>
+            {loading ? <span className="spinner" /> : 'Iniciar Conversatorio'}
           </button>
         </>
       )}
 
       {/* Chat messages */}
       {messages.length > 0 && (
-        <div className="chat-container" style={{marginTop:'12px'}}>
+        <div className="chat-container" style={{ marginTop: '12px' }}>
           {messages.map((m, i) => (
             <div key={i} className={`chat-msg ${m.role}`}>
-              <span className="avatar">{m.role==='user'?'🌸':'🌿'}</span>
+              <span className="avatar">{m.role === 'user' ? '🌸' : '🌿'}</span>
               {m.content}
             </div>
           ))}
-          {loading && <div className="chat-msg assistant"><span className="avatar">🌿</span><span className="spinner"/></div>}
+          {loading && <div className="chat-msg assistant"><span className="avatar">🌿</span><span className="spinner" /></div>}
         </div>
       )}
 
       {/* Follow-up input */}
       {active && !loading && (
-        <div style={{display:'flex',gap:'8px',marginTop:'8px'}}>
-          <input className="input-field" value={followUp} onChange={e => setFollowUp(e.target.value)} placeholder="Escribe tu respuesta..." onKeyDown={e => e.key==='Enter' && sendFollowUp()} style={{flex:1}} />
+        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+          <input className="input-field" value={followUp} onChange={e => setFollowUp(e.target.value)} placeholder="Escribe tu respuesta..." onKeyDown={e => e.key === 'Enter' && sendFollowUp()} style={{ flex: 1 }} />
           <button className="btn-blue" onClick={sendFollowUp}>Enviar</button>
         </div>
       )}
 
       {active && (
-        <button className="btn-outline" onClick={resetConversation} style={{width:'100%',marginTop:'8px',fontSize:'11px'}}>
+        <button className="btn-outline" onClick={resetConversation} style={{ width: '100%', marginTop: '8px', fontSize: '11px' }}>
           🔄 Nueva conversación
         </button>
       )}
@@ -831,15 +830,15 @@ function TabLogros({ addXp, showToast }) {
   const [logros, setLogros] = useState([]);
 
   useEffect(() => {
-    supabase.from('achievements').select('*').order('created_at', {ascending:false}).limit(20).then(({data, error}) => {
+    supabase.from('achievements').select('*').order('created_at', { ascending: false }).limit(20).then(({ data, error }) => {
       if (data && !error) setLogros(data);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const celebrate = async () => {
     if (!logroText.trim()) return;
     try {
-      const {data} = await supabase.from('achievements').insert({
+      const { data } = await supabase.from('achievements').insert({
         description: logroText, xp: 15, created_at: new Date().toISOString()
       }).select().single();
       await addXp(15);
@@ -854,20 +853,20 @@ function TabLogros({ addXp, showToast }) {
   return (
     <div className="section active">
       <div className="card">
-        <p style={{fontSize:'13px',fontWeight:600,marginBottom:'8px'}}>⭐ ¿De qué te sientes orgullosa hoy?</p>
-        <textarea className="textarea-field" value={logroText} onChange={e => setLogroText(e.target.value)} placeholder="Escribe aquí tu logro..." style={{minHeight:'80px',marginBottom:'8px'}} />
-        <button className="btn-blue" onClick={celebrate} style={{width:'100%'}}>¡Me felicito! (+15 XP)</button>
+        <p style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>⭐ ¿De qué te sientes orgullosa hoy?</p>
+        <textarea className="textarea-field" value={logroText} onChange={e => setLogroText(e.target.value)} placeholder="Escribe aquí tu logro..." style={{ minHeight: '80px', marginBottom: '8px' }} />
+        <button className="btn-blue" onClick={celebrate} style={{ width: '100%' }}>¡Me felicito! (+15 XP)</button>
       </div>
 
       {logros.length > 0 && (
         <>
-          <div className="section-label" style={{marginTop:'12px'}}>Logros recientes</div>
+          <div className="section-label" style={{ marginTop: '12px' }}>Logros recientes</div>
           {logros.map(l => (
             <div key={l.id} className="log-entry">
               <div className="log-icon">🌟</div>
               <div className="log-text">
                 <strong>{l.description}</strong>
-                <div className="log-time">{l.created_at?.slice(0,10)} · +{l.xp || 15} XP</div>
+                <div className="log-time">{l.created_at?.slice(0, 10)} · +{l.xp || 15} XP</div>
               </div>
             </div>
           ))}
@@ -875,7 +874,7 @@ function TabLogros({ addXp, showToast }) {
       )}
 
       {logros.length === 0 && (
-        <div className="empty-state"><span className="empty-icon">🌟</span>Aquí guardaremos cada<br/>pequeña victoria tuya, Sara.</div>
+        <div className="empty-state"><span className="empty-icon">🌟</span>Aquí guardaremos cada<br />pequeña victoria tuya, Sara.</div>
       )}
     </div>
   );
