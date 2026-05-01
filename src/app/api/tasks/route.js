@@ -5,29 +5,26 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 export async function POST(request) {
   try {
     const { task, context } = await request.json();
-    const model = ai.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: { responseMimeType: "application/json" },
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-      ]
+    const prompt = `TAREA: '${task}'\nCONTEXTO: '${context}'\n\nEres un Co-Ingeniero de Vida experto en desglosar tareas complejas en pasos accionables, simples y motivadores.
+    Si la tarea es demasiado vaga, pon "necesita_contexto": true y sugiere una "pregunta" para clarificar.
+    Si es clara, devuelve "pasos" (array de strings).
+    Devuelve SIEMPRE este JSON: {"necesita_contexto": boolean, "pregunta": string, "pasos": string[]}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        ]
+      }
     });
 
-    let prompt = context 
-      ? `Sara necesita romper esta tarea: '${task}'. Detalle: '${context}'. Genera pasos reales y concretos.`
-      : `Eres el asistente de Sara. Tarea: '${task}'. Rompela en pasos pequeños y reales. Si es vaga, haz una pregunta corta.`;
-
-    prompt += `\nResponde en JSON: {"necesita_contexto": boolean, "pregunta": string, "pasos": string[]}`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
-    // El SDK con responseMimeType ya debería dar JSON limpio
-    const data = JSON.parse(text);
+    const data = JSON.parse(response.text);
     return Response.json(data);
   } catch (error) {
     console.error("Tasks API error:", error);

@@ -5,15 +5,6 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 export async function POST(request) {
   try {
     const { messages, mood, contextoSuperacion } = await request.json();
-    const model = ai.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-      ]
-    });
 
     const emocionesCriticas = ["Ansiosa", "Estresada", "Enojada", "Triste", "Cansada", "Sin motivación"];
     const esCritico = emocionesCriticas.includes(mood);
@@ -72,10 +63,20 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
     }
     conversation += "\nContinúa el protocolo EJE GI. Responde como Co-Ingeniero basándote en lo último que Sara compartió. Haz máximo UNA pregunta al final para mantener el flujo.";
 
-    const result = await model.generateContent(conversation);
-    const response = await result.response;
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: conversation,
+      config: {
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        ]
+      }
+    });
 
-    return Response.json({ response: response.text() });
+    return Response.json({ response: response.text });
   } catch (error) {
     console.error("Doctor API error:", error);
     return Response.json({ 
