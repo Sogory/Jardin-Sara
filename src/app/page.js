@@ -434,8 +434,12 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
       )}
 
       <div className="card" style={{marginTop:'10px',background:'var(--bg2)',borderColor:'var(--blue)'}}>
-        <div style={{fontSize:'12px',fontWeight:700,marginBottom:'8px',color:'var(--blue)'}}>👨‍🚀 te saluda Sogory: ¿Qué flor buscas?</div>
-        <p style={{fontSize:'12px',marginBottom:'10px',lineHeight:'1.4'}}>{floristMsg}</p>
+        <div style={{fontSize:'12px',fontWeight:700,lineHeight:1.4,color:'var(--blue)'}}>
+          👨‍🚀 te saluda Sogory<br/>
+          Floreria 33 a su servicio<br/>
+          ¿Qué flor buscas hoy?
+        </div>
+        <p style={{fontSize:'12px',marginTop:'8px',marginBottom:'10px',lineHeight:'1.4'}}>{floristMsg}</p>
         
         {!recommendedPlant ? (
           <div className="input-row" style={{marginBottom:0}}>
