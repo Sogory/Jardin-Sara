@@ -133,7 +133,9 @@ function TabTareas({ xp, addXp, showToast }) {
       });
       const data = await res.json();
 
-      if (data.necesita_contexto && data.pregunta) {
+      if (data.error) {
+        showToast(data.message || 'La IA está descansando. Intenta en unos minutos.');
+      } else if (data.necesita_contexto && data.pregunta) {
         setNeedsContext(true);
         setContextQuestion(data.pregunta);
         setOriginalTask(task);
@@ -144,6 +146,8 @@ function TabTareas({ xp, addXp, showToast }) {
         setNeedsContext(false);
         setCelebration('🌱 Lo rompimos en pedacitos, Sara. ¡Empieza por el primero!');
         setTimeout(() => setCelebration(null), 3000);
+      } else {
+        showToast('No se generaron pasos. Intenta otra vez.');
       }
     } catch (e) {
       showToast('Error al procesar la tarea');

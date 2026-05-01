@@ -70,7 +70,10 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
 
     return Response.json({ response: response.text });
   } catch (error) {
-    console.error("Doctor API error:", error);
-    return Response.json({ error: "Error en el sistema" }, { status: 500 });
+    console.error("Doctor API error:", error.message || error);
+    return Response.json({ 
+      error: true,
+      response: "Lo siento, Sara. El sistema está descansando un momento. Intenta de nuevo en unos minutos. 🌿\n\nMientras tanto: pies al suelo, hombros sueltos, tres respiraciones profundas.\n\nTe amo Sara, si no puedes sola podemos juntos."
+    }, { status: 200 });
   }
 }
