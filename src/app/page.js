@@ -594,7 +594,6 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
         setHerbario(h => [data, ...h]);
       }
 
-      await supabase.from('achievements').insert({ description: `Trasplantaste tu ${name} al Herbario.`, xp: 10 });
       await addXp(10);
       await supabase.from('garden').delete().eq('id', plant.id);
 
