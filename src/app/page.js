@@ -434,7 +434,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
       )}
 
       <div className="card" style={{marginTop:'10px',background:'var(--bg2)',borderColor:'var(--blue)'}}>
-        <div style={{fontSize:'12px',fontWeight:700,marginBottom:'8px',color:'var(--blue)'}}>👨‍🚀 ¿Qué flor buscas? (Sogory)</div>
+        <div style={{fontSize:'12px',fontWeight:700,marginBottom:'8px',color:'var(--blue)'}}>👨‍🚀 te saluda Sogory: ¿Qué flor buscas?</div>
         <p style={{fontSize:'12px',marginBottom:'10px',lineHeight:'1.4'}}>{floristMsg}</p>
         
         {!recommendedPlant ? (
