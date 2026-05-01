@@ -38,6 +38,7 @@ const PLACEHOLDERS = {
 
 // ===== MAIN APP =====
 export default function Home() {
+  const [profile, setProfile] = useState(null);
   const [activeTab, setActiveTab] = useState('tareas');
   const [xp, setXp] = useState(0);
   const [toast, setToast] = useState(null);
@@ -45,22 +46,33 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
 
   // Mark as mounted (prevents hydration mismatch)
-  useEffect(() => { setMounted(true); }, []);
-
-  // Load XP on mount
   useEffect(() => {
-    supabase.from('user_stats').select('xp_total').eq('id', 1).single().then(({ data, error }) => {
-      if (data && !error) setXp(data.xp_total);
-    }).catch(() => { });
+    setMounted(true);
+    const savedProfile = localStorage.getItem('sara_active_profile');
+    if (savedProfile) setProfile(savedProfile);
   }, []);
 
+  // Load XP when profile changes
+  useEffect(() => {
+    if (!profile) return;
+    supabase.from('user_stats').select('xp_total').eq('user_id', profile).single().then(({ data, error }) => {
+      if (data && !error) setXp(data.xp_total);
+    }).catch(() => { });
+  }, [profile]);
+
   const addXp = useCallback(async (n) => {
+    if (!profile) return;
     const newXp = xp + n;
     setXp(newXp);
-    try { await supabase.from('user_stats').update({ xp_total: newXp }).eq('id', 1); } catch (e) { }
-  }, [xp]);
+    try { await supabase.from('user_stats').update({ xp_total: newXp }).eq('user_id', profile); } catch (e) { }
+  }, [xp, profile]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2800); };
+
+  const selectProfile = (p) => {
+    localStorage.setItem('sara_active_profile', p);
+    setProfile(p);
+  };
 
   const tabs = [
     { id: 'tareas', icon: '✏️', label: 'Tareas' },
@@ -71,15 +83,44 @@ export default function Home() {
   ];
 
   // Prevent hydration mismatch - show nothing until mounted
-  if (!mounted) return <div id="app"><div className="hero"><span className="hero-icon">🌸</span><h1>Hola, Sara 🌸</h1><p>Cargando tu jardín...</p></div></div>;
+  if (!mounted) return <div id="app"><div className="hero"><span className="hero-icon">🌸</span><h1>Cargando...</h1></div></div>;
+
+  // PROFILE SCREEN
+  if (!profile) {
+    return (
+      <div className="profile-screen">
+        <h1 className="profile-title">¿Quién eres hoy?</h1>
+        <p className="profile-subtitle">Tu jardín personal te espera.</p>
+        <div className="profile-cards">
+          <div className="profile-card sara" onClick={() => selectProfile('sara')}>
+            <span className="profile-emoji">🌸</span>
+            <div className="profile-name">Sara</div>
+            <div className="profile-desc">Un pasito a la vez.</div>
+            <button className="profile-btn sara" style={{marginTop: 'auto'}}>Entrar</button>
+          </div>
+          <div className="profile-card allen" onClick={() => selectProfile('allen')}>
+            <span className="profile-emoji">🌿</span>
+            <div className="profile-name">Allen</div>
+            <div className="profile-desc">Tu espacio privado.</div>
+            <button className="profile-btn allen" style={{marginTop: 'auto'}}>Entrar</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isSara = profile === 'sara';
 
   return (
     <div id="app">
       {/* Hero */}
       <div className="hero">
-        <span className="hero-icon">🌸</span>
-        <h1>Hola, Sara 🌸</h1>
+        <span className="hero-icon">{isSara ? '🌸' : '🌿'}</span>
+        <h1>Hola, {isSara ? 'Sara' : 'Allen'} {isSara ? '🌸' : '🌿'}</h1>
         <p>Un pasito a la vez. Sin prisa, sin culpa.</p>
+        <button className="hero-profile-badge" onClick={() => setProfile(null)}>
+          {isSara ? '🌸 Perfil Sara' : '🌿 Perfil Allen'} ▾
+        </button>
       </div>
 
       {/* XP Bar */}
@@ -90,11 +131,11 @@ export default function Home() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'tareas' && <TabTareas xp={xp} addXp={addXp} showToast={showToast} />}
-      {activeTab === 'jardin' && <TabJardin xp={xp} addXp={addXp} showToast={showToast} globalMood={globalMood} />}
-      {activeTab === 'saber' && <TabSaber xp={xp} addXp={addXp} showToast={showToast} />}
-      {activeTab === 'doctor' && <TabDoctor showToast={showToast} globalMood={globalMood} setGlobalMood={setGlobalMood} />}
-      {activeTab === 'logros' && <TabLogros xp={xp} addXp={addXp} showToast={showToast} />}
+      {activeTab === 'tareas' && <TabTareas xp={xp} addXp={addXp} showToast={showToast} profile={profile} isSara={isSara} />}
+      {activeTab === 'jardin' && <TabJardin xp={xp} addXp={addXp} showToast={showToast} globalMood={globalMood} profile={profile} />}
+      {activeTab === 'saber' && <TabSaber xp={xp} addXp={addXp} showToast={showToast} profile={profile} />}
+      {activeTab === 'doctor' && <TabDoctor showToast={showToast} globalMood={globalMood} setGlobalMood={setGlobalMood} profile={profile} />}
+      {activeTab === 'logros' && <TabLogros xp={xp} addXp={addXp} showToast={showToast} profile={profile} />}
 
       {/* Bottom Nav */}
       <nav className="bottom-nav">
@@ -112,7 +153,7 @@ export default function Home() {
 }
 
 // ===== TAB: TAREAS =====
-function TabTareas({ xp, addXp, showToast }) {
+function TabTareas({ xp, addXp, showToast, profile, isSara }) {
   const [taskInput, setTaskInput] = useState('');
   const [steps, setSteps] = useState(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -125,6 +166,22 @@ function TabTareas({ xp, addXp, showToast }) {
   const [celebration, setCelebration] = useState(null);
   const [analogMode, setAnalogMode] = useState(false);
   const [manualSteps, setManualSteps] = useState(['', '', '']);
+  const [pendientes, setPendientes] = useState([]);
+
+  useEffect(() => {
+    if (!profile) return;
+    const fetchPendientes = async () => {
+      // Fetch pendientes that are NOT from today (so from yesterday or before)
+      const today = new Date().toISOString().split('T')[0];
+      const { data } = await supabase.from('pendientes')
+        .select('*')
+        .eq('user_id', profile)
+        .lt('fecha_guardado', today)
+        .order('fecha_guardado', { ascending: false });
+      if (data) setPendientes(data);
+    };
+    fetchPendientes();
+  }, [profile]);
 
   const breakTask = async (task, context) => {
     setLoading(true);
@@ -150,7 +207,7 @@ function TabTareas({ xp, addXp, showToast }) {
         setStepIndex(0);
         setCompletedSteps([]);
         setNeedsContext(false);
-        setCelebration('🌱 Lo rompimos en pedacitos, Sara. ¡Empieza por el primero!');
+        setCelebration(`🌱 Lo rompimos en pedacitos, ${isSara ? 'Sara' : 'Allen'}. ¡Empieza por el primero!`);
         setTimeout(() => setCelebration(null), 3000);
       } else {
         setAnalogMode(true);
@@ -173,7 +230,7 @@ function TabTareas({ xp, addXp, showToast }) {
     setStepIndex(0);
     setCompletedSteps([]);
     setAnalogMode(false);
-    setCelebration('🌱 ¡Tú lo rompiste solita, Sara! Empieza por el primero.');
+    setCelebration(`🌱 ¡Tú lo rompiste solito, ${isSara ? 'Sara' : 'Allen'}! Empieza por el primero.`);
     setTimeout(() => setCelebration(null), 3000);
   };
 
@@ -187,24 +244,65 @@ function TabTareas({ xp, addXp, showToast }) {
       addXp(10);
       if (i === stepIndex && i < steps.length - 1) setStepIndex(stepIndex + 1);
       if (newCompleted.length === steps.length) {
-        setCelebration('🎉 ¡Misión cumplida, Sara!');
+        setCelebration(`🎉 ¡Misión cumplida, ${isSara ? 'Sara' : 'Allen'}!`);
       } else {
-        const msgs = ['✨ Ese es el 1%. Ya empezaste.', '💪 Sigue a tu ritmo, Sara.', '🌟 Cada pasito cuenta.', '🎵 Pequeño logro, grande tú.'];
+        const msgs = ['✨ Ese es el 1%. Ya empezaste.', `💪 Sigue a tu ritmo, ${isSara ? 'Sara' : 'Allen'}.`, '🌟 Cada pasito cuenta.', '🎵 Pequeño logro, grande tú.'];
         setCelebration(msgs[Math.floor(Math.random() * msgs.length)]);
         setTimeout(() => setCelebration(null), 3000);
       }
     }
   };
 
-  const finishTask = async () => {
+  const finishTask = async (isFromPendientes = false) => {
     await addXp(25);
-    showToast('✨ ¡+25 XP! Has completado la tarea.');
+    if (isFromPendientes) {
+      showToast('✨ ¡+25 XP! La trajiste de ayer y la venciste hoy. 💪');
+    } else {
+      showToast('✨ ¡+25 XP! Has completado la tarea.');
+    }
     resetAll();
   };
 
+  const deferToTomorrow = async () => {
+    if (!profile) return;
+    setLoading(true);
+    try {
+      const taskName = taskInput || originalTask;
+      const today = new Date().toISOString().split('T')[0];
+      await supabase.from('pendientes').insert({
+        user_id: profile,
+        tarea: taskName,
+        fecha_guardado: today,
+        pasos: steps || manualSteps.filter(s => s.trim())
+      });
+      showToast('🌙 Tarea aparcada. Descansa, mañana será otro día.');
+      resetAll();
+    } catch (e) {
+      showToast('Error al guardar pendiente.');
+    }
+    setLoading(false);
+  };
+
+  const breakPendiente = async (p) => {
+    setOriginalTask(p.tarea);
+    setTaskInput(p.tarea);
+    if (p.pasos && p.pasos.length > 0) {
+      setSteps(p.pasos);
+      setStepIndex(0);
+      setCompletedSteps([]);
+      setNeedsContext(false);
+      setAnalogMode(false);
+    } else {
+      await breakTask(p.tarea);
+    }
+    // Delete from pendientes once it's actively being broken
+    await supabase.from('pendientes').delete().eq('id', p.id);
+    setPendientes(prev => prev.filter(item => item.id !== p.id));
+  };
+
   const resetAll = () => {
-    setSteps(null); setNeedsContext(false); setAnalogMode(false);
-    setManualSteps(['', '', '']); setCelebration(null); setCompletedSteps([]); setStepIndex(0);
+    setTaskInput(''); setSteps(null); setNeedsContext(false); setAnalogMode(false);
+    setManualSteps(['', '', '']); setCelebration(null); setCompletedSteps([]); setStepIndex(0); setOriginalTask('');
   };
 
   const allDone = steps && completedSteps.length === steps.length;
@@ -212,6 +310,24 @@ function TabTareas({ xp, addXp, showToast }) {
 
   return (
     <div className="section active">
+      {/* Pendientes Inbox (solo si no hay tarea activa y hay pendientes) */}
+      {!steps && !needsContext && !analogMode && pendientes.length > 0 && (
+        <div className="pendientes-bandeja">
+          <div className="pendientes-header">
+            <span style={{fontSize: '16px'}}>📬</span> De ayer
+          </div>
+          {pendientes.map(p => (
+            <div key={p.id} className="pendiente-item">
+              <div style={{ flex: 1 }}>
+                <div className="pendiente-tarea">{p.tarea}</div>
+                <span className="pendiente-fecha">{p.fecha_guardado}</span>
+              </div>
+              <button className="btn-romper-ahora" onClick={() => breakPendiente(p)}>Romper ahora</button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Input */}
       {!steps && !needsContext && !analogMode && (
         <>
@@ -302,15 +418,20 @@ function TabTareas({ xp, addXp, showToast }) {
 
           {allDone && (
             <div style={{ marginTop: '12px', textAlign: 'center' }}>
-              <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>🌟 ¡Misión cumplida, Sara!</p>
-              <button className="btn-blue" onClick={finishTask} style={{ width: '100%' }}>Terminar tarea y ganar 25 XP</button>
+              <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>🌟 ¡Misión cumplida, {isSara ? 'Sara' : 'Allen'}!</p>
+              <button className="btn-blue" onClick={() => finishTask(false)} style={{ width: '100%' }}>Terminar tarea y ganar 25 XP</button>
             </div>
           )}
 
           {!allDone && (
-            <button className="btn-outline" onClick={resetAll} style={{ width: '100%', marginTop: '8px', fontSize: '11px' }}>
-              Cancelar tarea
-            </button>
+            <>
+              <button className="btn-manana" onClick={deferToTomorrow}>
+                🌙 Dejar para mañana
+              </button>
+              <button className="btn-outline" onClick={resetAll} style={{ width: '100%', marginTop: '8px', fontSize: '11px' }}>
+                Cancelar tarea
+              </button>
+            </>
           )}
         </div>
       )}
@@ -320,13 +441,13 @@ function TabTareas({ xp, addXp, showToast }) {
 }
 
 // ===== TAB: JARDÍN =====
-function TabJardin({ xp, addXp, showToast, globalMood }) {
+function TabJardin({ xp, addXp, showToast, globalMood, profile }) {
   const [garden, setGarden] = useState([]);
   const [herbario, setHerbario] = useState([]);
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isFloristOpen, setIsFloristOpen] = useState(false);
-  const [floristMsg, setFloristMsg] = useState('¿Buscas algo especial hoy, Sara?');
+  const [floristMsg, setFloristMsg] = useState('¿Buscas algo especial hoy?');
   const [floristLoading, setFloristLoading] = useState(false);
   const [floristInput, setFloristInput] = useState('');
   const [recommendedPlant, setRecommendedPlant] = useState(null);
@@ -335,20 +456,21 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   const [customPlants, setCustomPlants] = useState([]);
 
   useEffect(() => {
-    supabase.from('garden').select('*').order('created_at').then(({ data, error }) => {
+    if (!profile) return;
+    supabase.from('garden').select('*').eq('user_id', profile).order('created_at').then(({ data, error }) => {
       if (data && !error) setGarden(data);
     }).catch(() => { });
 
-    supabase.from('herbario').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
+    supabase.from('herbario').select('*').eq('user_id', profile).order('created_at', { ascending: false }).then(({ data, error }) => {
       if (data && !error) setHerbario(data);
     }).catch(() => { });
 
-    const storedHidden = JSON.parse(localStorage.getItem('hiddenPlants') || '[]');
+    const storedHidden = JSON.parse(localStorage.getItem(`hiddenPlants_${profile}`) || '[]');
     setHiddenPlants(storedHidden);
     
-    const storedCustom = JSON.parse(localStorage.getItem('customPlants') || '[]');
+    const storedCustom = JSON.parse(localStorage.getItem(`customPlants_${profile}`) || '[]');
     setCustomPlants(storedCustom);
-  }, []);
+  }, [profile]);
 
   const ALL_PLANTS = [...SHOP_PLANTS, ...customPlants];
 
@@ -357,7 +479,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
     if (confirm('¿Quieres ocultar esta flor para que no vuelva a aparecer en el catálogo?')) {
       const newHidden = [...hiddenPlants, plantId];
       setHiddenPlants(newHidden);
-      localStorage.setItem('hiddenPlants', JSON.stringify(newHidden));
+      localStorage.setItem(`hiddenPlants_${profile}`, JSON.stringify(newHidden));
       showToast("Flor oculta. Ya no aparecerá.");
     }
   };
@@ -383,10 +505,11 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   };
 
   const buyPlant = async (def) => {
+    if (!profile) return;
     if (xp < def.cost) { showToast(`Necesitas ${def.cost} XP para esta flor 💧`); return; }
     if (garden.length >= 8) { showToast('Tu jardín está lleno 🌿'); return; }
     await addXp(-def.cost);
-    const { data } = await supabase.from('garden').insert({ name: def.name, plant_type: def.id, health: 100, last_watered: new Date().toISOString() }).select().single();
+    const { data } = await supabase.from('garden').insert({ name: def.name, plant_type: def.id, health: 100, last_watered: new Date().toISOString(), user_id: profile }).select().single();
     if (data) setGarden([...garden, data]);
     showToast(`¡${def.emoji} ${def.name} ahora vive en tu jardín!`);
   };
@@ -426,7 +549,7 @@ function TabJardin({ xp, addXp, showToast, globalMood }) {
   return (
     <div className="section active">
       {garden.length === 0 ? (
-        <div className="empty-state"><span className="empty-icon">🪴</span>Tu jardín espera, Sara.<br />Gana XP y adopta tu primera flor.</div>
+        <div className="empty-state"><span className="empty-icon">🪴</span>Tu jardín espera, {profile === 'sara' ? 'Sara' : 'Allen'}.<br />Gana XP y adopta tu primera flor.</div>
       ) : (
         <>
           <div className="section-label">Tu jardín</div>
@@ -666,15 +789,16 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
 }
 
 // ===== TAB: SABER =====
-function TabSaber({ addXp, showToast }) {
+function TabSaber({ addXp, showToast, profile }) {
   const [activeCat, setActiveCat] = useState('todos');
   const [readCurios, setReadCurios] = useState([]);
   const [localCurios, setLocalCurios] = useState([]);
   const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
+    if (!profile) return;
     try {
-      const saved = JSON.parse(localStorage.getItem('sara_read_curios') || '[]');
+      const saved = JSON.parse(localStorage.getItem(`read_curios_${profile}`) || '[]');
       setReadCurios(saved);
       // Solo cargar las que no se han leído
       const unreadStatic = CURIOSIDADES.filter(c => !saved.includes(c.id));
@@ -686,7 +810,7 @@ function TabSaber({ addXp, showToast }) {
     if (readCurios.includes(id)) return;
     const newRead = [...readCurios, id];
     setReadCurios(newRead);
-    localStorage.setItem('sara_read_curios', JSON.stringify(newRead));
+    localStorage.setItem(`read_curios_${profile}`, JSON.stringify(newRead));
 
     // Quitar de la pantalla
     setLocalCurios(prev => prev.filter(c => c.id !== id));
@@ -754,7 +878,7 @@ function TabSaber({ addXp, showToast }) {
 }
 
 // ===== TAB: DOCTOR =====
-function TabDoctor({ showToast, globalMood, setGlobalMood }) {
+function TabDoctor({ showToast, globalMood, setGlobalMood, profile }) {
   const [relato, setRelato] = useState('');
   const [messages, setMessages] = useState([]);
   const [active, setActive] = useState(false);
@@ -784,9 +908,11 @@ function TabDoctor({ showToast, globalMood, setGlobalMood }) {
     if (!relato.trim()) return;
     // Save to DB
     try {
-      await supabase.from('registro_emocional_eje_gi').insert({
-        emocion: globalMood, relato_usuario: relato, es_momento_luz: globalMood === 'Feliz'
-      });
+      if (profile) {
+        await supabase.from('registro_emocional_eje_gi').insert({
+          emocion: globalMood, relato_usuario: relato, es_momento_luz: globalMood === 'Feliz', user_id: profile
+        });
+      }
     } catch (e) { }
 
     const firstMsg = [{ role: 'user', content: `Me siento ${globalMood}. ${relato}` }];
@@ -858,21 +984,22 @@ function TabDoctor({ showToast, globalMood, setGlobalMood }) {
 }
 
 // ===== TAB: LOGROS =====
-function TabLogros({ addXp, showToast }) {
+function TabLogros({ addXp, showToast, profile }) {
   const [logroText, setLogroText] = useState('');
   const [logros, setLogros] = useState([]);
 
   useEffect(() => {
-    supabase.from('achievements').select('*').order('created_at', { ascending: false }).limit(20).then(({ data, error }) => {
+    if (!profile) return;
+    supabase.from('achievements').select('*').eq('user_id', profile).order('created_at', { ascending: false }).limit(20).then(({ data, error }) => {
       if (data && !error) setLogros(data);
     }).catch(() => { });
-  }, []);
+  }, [profile]);
 
   const celebrate = async () => {
-    if (!logroText.trim()) return;
+    if (!logroText.trim() || !profile) return;
     try {
       const { data } = await supabase.from('achievements').insert({
-        description: logroText, xp: 15, created_at: new Date().toISOString()
+        description: logroText, xp: 15, created_at: new Date().toISOString(), user_id: profile
       }).select().single();
       await addXp(15);
       if (data) setLogros([data, ...logros]);

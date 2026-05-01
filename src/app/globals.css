@@ -330,3 +330,194 @@ body {
 }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* PROFILE PICKER */
+.profile-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  background: var(--bg3);
+  animation: fadeIn 0.4s ease;
+}
+.profile-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  text-align: center;
+}
+.profile-subtitle {
+  font-size: 13px;
+  color: var(--text2);
+  text-align: center;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+.profile-cards {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  max-width: 340px;
+}
+.profile-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 12px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.profile-card:active {
+  transform: scale(0.96);
+  border-color: var(--blue);
+}
+.profile-card.sara:hover, .profile-card.sara:active {
+  border-color: #ec4899;
+  box-shadow: 0 0 0 4px rgba(236,72,153,0.1);
+}
+.profile-card.allen:hover, .profile-card.allen:active {
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16,185,129,0.1);
+}
+.profile-emoji {
+  font-size: 52px;
+  line-height: 1;
+  animation: fl 3s ease-in-out infinite;
+}
+.profile-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.profile-desc {
+  font-size: 11px;
+  color: var(--text3);
+  text-align: center;
+  line-height: 1.4;
+}
+.profile-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.profile-btn.sara { background: #fce7f3; color: #be185d; }
+.profile-btn.allen { background: #d1fae5; color: #065f46; }
+
+/* PERFIL badge en hero */
+.hero-profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text3);
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 99px;
+  padding: 3px 10px;
+  margin-top: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.hero-profile-badge:active { background: var(--bg3); }
+
+/* PENDIENTES — Bandeja De ayer */
+.pendientes-bandeja {
+  background: var(--bg);
+  border: 1.5px solid #f59e0b;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  animation: fadeIn 0.3s ease;
+}
+.pendientes-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b45309;
+  margin-bottom: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  .pendientes-bandeja { background: #1c1500; border-color: #b45309; }
+  .pendientes-header { color: #fbbf24; }
+}
+.pendiente-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg2);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  animation: fadeIn 0.2s ease;
+}
+.pendiente-tarea {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.3;
+}
+.pendiente-fecha {
+  font-size: 10px;
+  color: var(--text3);
+  display: block;
+  margin-top: 1px;
+}
+.btn-romper-ahora {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: #f59e0b;
+  color: white;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.btn-romper-ahora:active { opacity: 0.8; }
+
+/* Boton Dejar para manana */
+.btn-manana {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px dashed #f59e0b;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: #b45309;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-manana:active { background: #fef3c7; }
+@media (prefers-color-scheme: dark) {
+  .btn-manana { color: #fbbf24; }
+  .btn-manana:active { background: #1c1500; }
+}
+
+@keyframes shatter {
+  0% { transform: scale(1) rotate(0deg); opacity: 1; }
+  30% { transform: scale(1.1) rotate(-3deg); }
+  60% { transform: scale(0.95) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
