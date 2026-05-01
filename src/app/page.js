@@ -122,10 +122,13 @@ function TabTareas({ xp, addXp, showToast }) {
   const [contextAnswer, setContextAnswer] = useState('');
   const [originalTask, setOriginalTask] = useState('');
   const [celebration, setCelebration] = useState(null);
+  const [analogMode, setAnalogMode] = useState(false);
+  const [manualSteps, setManualSteps] = useState(['', '', '']);
 
   const breakTask = async (task, context) => {
     setLoading(true);
     setCelebration(null);
+    setAnalogMode(false);
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
@@ -135,7 +138,8 @@ function TabTareas({ xp, addXp, showToast }) {
       const data = await res.json();
 
       if (data.error) {
-        setCelebration('⏳ ' + (data.message || 'La IA está descansando. Intenta en 1 minuto.'));
+        setAnalogMode(true);
+        setOriginalTask(task || taskInput);
       } else if (data.necesita_contexto && data.pregunta) {
         setNeedsContext(true);
         setContextQuestion(data.pregunta);
@@ -148,12 +152,28 @@ function TabTareas({ xp, addXp, showToast }) {
         setCelebration('🌱 Lo rompimos en pedacitos, Sara. ¡Empieza por el primero!');
         setTimeout(() => setCelebration(null), 3000);
       } else {
-        setCelebration('⏳ No se generaron pasos. Intenta otra vez en un momento.');
+        setAnalogMode(true);
+        setOriginalTask(task || taskInput);
       }
     } catch (e) {
-      setCelebration('⏳ Error de conexión. Verifica tu internet e intenta otra vez.');
+      setAnalogMode(true);
+      setOriginalTask(taskInput);
     }
     setLoading(false);
+  };
+
+  const addManualStep = () => setManualSteps([...manualSteps, '']);
+  const updateManualStep = (i, val) => { const n = [...manualSteps]; n[i] = val; setManualSteps(n); };
+
+  const startManualSteps = () => {
+    const filtered = manualSteps.filter(s => s.trim());
+    if (filtered.length === 0) return;
+    setSteps(filtered);
+    setStepIndex(0);
+    setCompletedSteps([]);
+    setAnalogMode(false);
+    setCelebration('🌱 ¡Tú lo rompiste solita, Sara! Empieza por el primero.');
+    setTimeout(() => setCelebration(null), 3000);
   };
 
   const toggleStep = (i) => {
@@ -165,7 +185,6 @@ function TabTareas({ xp, addXp, showToast }) {
       setCompletedSteps(newCompleted);
       addXp(10);
       if (i === stepIndex && i < steps.length - 1) setStepIndex(stepIndex + 1);
-
       if (newCompleted.length === steps.length) {
         setCelebration('🎉 ¡Misión cumplida, Sara!');
       } else {
@@ -179,9 +198,12 @@ function TabTareas({ xp, addXp, showToast }) {
   const finishTask = async () => {
     await addXp(25);
     showToast('✨ ¡+25 XP! Has completado la tarea.');
-    setSteps(null);
-    setCompletedSteps([]);
-    setStepIndex(0);
+    resetAll();
+  };
+
+  const resetAll = () => {
+    setSteps(null); setNeedsContext(false); setAnalogMode(false);
+    setManualSteps(['', '', '']); setCelebration(null); setCompletedSteps([]); setStepIndex(0);
   };
 
   const allDone = steps && completedSteps.length === steps.length;
@@ -190,7 +212,7 @@ function TabTareas({ xp, addXp, showToast }) {
   return (
     <div className="section active">
       {/* Input */}
-      {!steps && !needsContext && (
+      {!steps && !needsContext && !analogMode && (
         <>
           <div className="input-row">
             <input value={taskInput} onChange={e => setTaskInput(e.target.value)} placeholder="¿Qué tarea tienes pendiente?" onKeyDown={e => e.key==='Enter' && taskInput && breakTask(taskInput)} />
@@ -210,6 +232,50 @@ function TabTareas({ xp, addXp, showToast }) {
           <button className="btn-blue" onClick={() => { if(contextAnswer) breakTask(originalTask, contextAnswer); }} disabled={loading} style={{width:'100%'}}>
             {loading ? <span className="spinner"/> : 'Romper en pedacitos'}
           </button>
+        </div>
+      )}
+
+      {/* ===== MODO SOBERANO — Analog Fallback ===== */}
+      {analogMode && (
+        <div className="card">
+          <p style={{fontSize:'14px',fontWeight:700,marginBottom:'10px'}}>🧠 Modo Soberano — Rómpelo tú</p>
+          <p style={{fontSize:'12px',color:'var(--text2)',marginBottom:'12px',lineHeight:'1.6'}}>
+            La IA descansa, pero tú no la necesitas. Usa esta fórmula:
+          </p>
+
+          <div style={{background:'var(--bg2)',borderRadius:'var(--radius-sm)',padding:'12px',marginBottom:'12px'}}>
+            <p style={{fontSize:'12px',fontWeight:600,color:'var(--text)',marginBottom:'6px'}}>📋 Fórmula de 3 preguntas:</p>
+            <p style={{fontSize:'12px',color:'var(--text2)',lineHeight:'1.7'}}>
+              <strong>1.</strong> ¿Qué es lo PRIMERO que toco con las manos?<br/>
+              <strong>2.</strong> ¿Qué hago DESPUÉS con eso?<br/>
+              <strong>3.</strong> ¿Cómo sé que TERMINÉ?
+            </p>
+          </div>
+
+          <p style={{fontSize:'12px',fontWeight:600,color:'var(--text)',marginBottom:'8px'}}>
+            Tu tarea: <em style={{color:'var(--blue)'}}>{originalTask}</em>
+          </p>
+
+          <div style={{display:'flex',flexDirection:'column',gap:'6px',marginBottom:'10px'}}>
+            {manualSteps.map((s, i) => (
+              <div key={i} style={{display:'flex',gap:'6px',alignItems:'center'}}>
+                <span style={{fontSize:'11px',color:'var(--text3)',minWidth:'18px'}}>{i+1}.</span>
+                <input
+                  className="input-field"
+                  value={s}
+                  onChange={e => updateManualStep(i, e.target.value)}
+                  placeholder={i===0 ? 'Lo primero que toco...' : i===manualSteps.length-1 ? 'Así sé que terminé...' : 'Después hago...'}
+                  style={{fontSize:'13px',padding:'8px 10px'}}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div style={{display:'flex',gap:'6px'}}>
+            <button className="btn-outline" onClick={addManualStep} style={{fontSize:'11px',padding:'7px 12px'}}>+ Paso</button>
+            <button className="btn-blue" onClick={startManualSteps} style={{flex:1}}>¡Empezar!</button>
+          </div>
+          <button className="btn-outline" onClick={resetAll} style={{width:'100%',marginTop:'8px',fontSize:'11px'}}>← Volver</button>
         </div>
       )}
 
@@ -241,13 +307,14 @@ function TabTareas({ xp, addXp, showToast }) {
           )}
 
           {!allDone && (
-            <button className="btn-outline" onClick={() => {setSteps(null);setNeedsContext(false);}} style={{width:'100%',marginTop:'8px',fontSize:'11px'}}>
+            <button className="btn-outline" onClick={resetAll} style={{width:'100%',marginTop:'8px',fontSize:'11px'}}>
               Cancelar tarea
             </button>
           )}
         </div>
       )}
     </div>
+
   );
 }
 
