@@ -48,6 +48,9 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [showSky, setShowSky] = useState(false);
+  const [tomorrowTasks, setTomorrowTasks] = useState([]);
+  const [triggerTask, setTriggerTask] = useState(null);
 
   // Mark as mounted and initialize auth
   useEffect(() => {
@@ -74,7 +77,18 @@ export default function Home() {
     supabase.from('user_stats').select('xp_total').eq('user_id', profile).single().then(({ data, error }) => {
       if (data && !error) setXp(data.xp_total);
     }).catch(() => { });
+    fetchTomorrowTasks();
   }, [profile]);
+
+  const fetchTomorrowTasks = async () => {
+    if (!profile) return;
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase.from('pendientes')
+      .select('*')
+      .eq('user_id', profile)
+      .eq('fecha_guardado', today);
+    if (data) setTomorrowTasks(data);
+  };
 
   const addXp = useCallback(async (n) => {
     if (!profile) return;
@@ -166,10 +180,47 @@ export default function Home() {
 
   const isSara = profile === 'sara';
 
+  const bringToToday = async (task) => {
+    // Remove from tomorrow and trigger in today
+    await supabase.from('pendientes').delete().eq('id', task.id);
+    setTriggerTask({ name: task.tarea, steps: task.pasos });
+    setTomorrowTasks(prev => prev.filter(t => t.id !== task.id));
+    setShowSky(false);
+    setActiveTab('tareas');
+  };
+
   return (
     <div id="app">
+      {/* SKY PANEL */}
+      {showSky && (
+        <div className="tomorrow-sky-panel">
+          <div className="sky-title">
+            <span>✨</span> El Cielo del Mañana 🌙
+          </div>
+          <div className="sky-subtitle">Semillas descansando para el próximo sol</div>
+          
+          <div className="sky-tasks-list">
+            {tomorrowTasks.length === 0 ? (
+              <div className="sky-empty">No hay semillas en el cielo todavía.</div>
+            ) : (
+              tomorrowTasks.map(t => (
+                <div key={t.id} className="sky-task-item">
+                  <span className="sky-task-name">{t.tarea}</span>
+                  <button className="btn-sky-action" onClick={() => bringToToday(t)}>☀️ Hoy</button>
+                </div>
+              ))
+            )}
+          </div>
+          
+          <button className="sky-close-btn" onClick={() => setShowSky(false)}>Cerrar el cielo</button>
+        </div>
+      )}
+
       {/* Hero */}
       <div className="hero">
+        <button className={`tomorrow-sky-toggle ${showSky ? 'active' : ''}`} onClick={() => setShowSky(!showSky)}>
+          {showSky ? '✨' : '🌙'}
+        </button>
         <span className="hero-icon">{isSara ? '🌸' : '🌿'}</span>
         <h1>Hola, {isSara ? 'Sara' : 'Allen'} {isSara ? '🌸' : '🌿'}</h1>
         <p>Un pasito a la vez. Sin prisa, sin culpa.</p>
@@ -186,7 +237,18 @@ export default function Home() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'tareas' && <TabTareas xp={xp} addXp={addXp} showToast={showToast} profile={profile} isSara={isSara} />}
+      {activeTab === 'tareas' && (
+        <TabTareas 
+          xp={xp} 
+          addXp={addXp} 
+          showToast={showToast} 
+          profile={profile} 
+          isSara={isSara} 
+          onTasksUpdated={fetchTomorrowTasks}
+          triggerTask={triggerTask}
+          onTriggerConsumed={() => setTriggerTask(null)}
+        />
+      )}
       {activeTab === 'jardin' && <TabJardin xp={xp} addXp={addXp} showToast={showToast} globalMood={globalMood} profile={profile} />}
       {activeTab === 'saber' && <TabSaber xp={xp} addXp={addXp} showToast={showToast} profile={profile} />}
       {activeTab === 'doctor' && <TabDoctor showToast={showToast} globalMood={globalMood} setGlobalMood={setGlobalMood} profile={profile} />}
@@ -208,7 +270,7 @@ export default function Home() {
 }
 
 // ===== TAB: TAREAS =====
-function TabTareas({ xp, addXp, showToast, profile, isSara }) {
+function TabTareas({ xp, addXp, showToast, profile, isSara, onTasksUpdated, triggerTask, onTriggerConsumed }) {
   const [taskInput, setTaskInput] = useState('');
   const [steps, setSteps] = useState(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -237,6 +299,21 @@ function TabTareas({ xp, addXp, showToast, profile, isSara }) {
     };
     fetchPendientes();
   }, [profile]);
+
+  useEffect(() => {
+    if (triggerTask) {
+      setTaskInput(triggerTask.name);
+      setOriginalTask(triggerTask.name);
+      if (triggerTask.steps && triggerTask.steps.length > 0) {
+        setSteps(triggerTask.steps);
+        setStepIndex(0);
+        setCompletedSteps([]);
+      } else {
+        breakTask(triggerTask.name);
+      }
+      onTriggerConsumed();
+    }
+  }, [triggerTask]);
 
   const breakTask = async (task, context) => {
     setLoading(true);
@@ -335,6 +412,7 @@ function TabTareas({ xp, addXp, showToast, profile, isSara }) {
         pasos: steps || manualSteps.filter(s => s.trim())
       });
       showToast('🌙 Tarea aparcada. Descansa, mañana será otro día.');
+      if (onTasksUpdated) onTasksUpdated();
       resetAll();
     } catch (e) {
       showToast('Error al guardar pendiente.');

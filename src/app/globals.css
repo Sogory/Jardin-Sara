@@ -521,3 +521,133 @@ body {
   60% { transform: scale(0.95) rotate(2deg); }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+/* ===== EL CIELO DEL MAÑANA (Tomorrow's Sky) ===== */
+.tomorrow-sky-toggle {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 50;
+  transition: all 0.3s ease;
+}
+.tomorrow-sky-toggle.active {
+  background: #1e1b4b;
+  border-color: #4338ca;
+  color: #fbbf24;
+  transform: rotate(-15deg);
+}
+
+.tomorrow-sky-panel {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+  z-index: 400;
+  padding: 60px 20px 25px;
+  border-bottom-left-radius: 25px;
+  border-bottom-right-radius: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  animation: slideDownSky 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownSky {
+  from { transform: translate(-50%, -100%); }
+  to { transform: translate(-50%, 0); }
+}
+
+.sky-title {
+  color: #e0e7ff;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sky-subtitle {
+  color: #94a3b8;
+  font-size: 12px;
+  text-align: center;
+  margin-top: -8px;
+}
+
+.sky-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.sky-task-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sky-task-name {
+  color: #f1f5f9;
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.btn-sky-action {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-sky-action:active {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.95);
+}
+
+.sky-close-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 99px;
+  color: #94a3b8;
+  font-size: 12px;
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.sky-empty {
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+  font-size: 12px;
+  font-style: italic;
+}
