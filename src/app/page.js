@@ -207,7 +207,7 @@ export default function Home() {
               <button 
                 className="edit-profile-mini" 
                 onClick={(e) => { e.stopPropagation(); setEditingProfile(id); }}
-                style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.2)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', color: 'white', fontSize: '14px', cursor: 'pointer', z-index: 10 }}
+                style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.2)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', color: 'white', fontSize: '14px', cursor: 'pointer', zIndex: 10 }}
               >
                 ⚙️
               </button>
