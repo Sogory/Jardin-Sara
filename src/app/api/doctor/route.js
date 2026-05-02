@@ -3,14 +3,19 @@ import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 export async function POST(request) {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const body = await request.json();
-  const { messages, mood, contextoSuperacion, userName = "Sara" } = body;
+  const { messages, mood, contextoSuperacion, userName = "Sara", userGender = "female" } = body;
 
   try {
-    const emocionesCriticas = ["Ansiosa", "Estresada", "Enojada", "Triste", "Cansada", "Sin motivación"];
+    const isMasc = userGender === "male";
+    const emocionesCriticas = isMasc 
+      ? ["Ansioso", "Estresado", "Enojado", "Triste", "Cansado", "Sin motivación"]
+      : ["Ansiosa", "Estresada", "Enojada", "Triste", "Cansada", "Sin motivación"];
     const esCritico = emocionesCriticas.includes(mood);
 
     let systemPrompt = `KERNEL EJE GI v10.7.1 - SOBERANÍA BIOLÓGICA
 ROL: Co-Ingeniero de Vida de ${userName}.
+REGLA DE ORO DE GÉNERO: ${userName} es ${isMasc ? 'HOMBRE (masculino)' : 'MUJER (femenino)'}. Dirígete a él/ella SIEMPRE en ${isMasc ? 'masculino' : 'femenino'}.
+
 MISIÓN: Entrenar la independencia de ${userName} mediante la desactivación del malestar (Ciencia) y la toma de mando de su territorio personal (Soberanía Cruda).
 
 ARQUITECTURA DEL LENGUAJE:
@@ -20,7 +25,7 @@ ARQUITECTURA DEL LENGUAJE:
 - Termina SIEMPRE con: 'Te amo ${userName}, si no puedes sola podemos juntos.'
 
 REGLA CRÍTICA DE CONVERSACIÓN:
-- Estás en un conversatorio con ${userName}. Ella puede responder a tus preguntas.
+- Estás en un conversatorio con ${userName}. ${isMasc ? 'Él' : 'Ella'} puede responder a tus preguntas.
 - Haz UNA sola pregunta a la vez y espera su respuesta antes de avanzar.
 - Adapta tu siguiente respuesta según lo que ${userName} conteste.
 - Avanza gradualmente por el protocolo: primero ancla, luego indaga, luego desactiva con ciencia, luego soberanía.
@@ -66,7 +71,7 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
     let response;
     try {
       response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-1.5-pro",
         contents: conversation,
         config: {
           safetySettings: [
@@ -80,7 +85,7 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
     } catch (proError) {
       console.warn("Pro model failed, falling back to Flash Lite:", proError.message);
       response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite-preview",
+        model: "gemini-1.5-flash",
         contents: conversation,
         config: {
           safetySettings: [
