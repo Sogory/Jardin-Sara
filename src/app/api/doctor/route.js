@@ -71,7 +71,7 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
     let response;
     try {
       response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.0-flash-exp",
         contents: [{ role: "user", parts: [{ text: conversation }] }]
       });
     } catch (proError) {
