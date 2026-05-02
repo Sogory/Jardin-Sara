@@ -1,7 +1,7 @@
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 export async function POST(request) {
-  const ai = new GoogleGenAI({ apiKey: "AIzaSyBKSbzisfW-BUcuvjwrQhnvESnDnrTzkPM" });
+  const genAI = new GoogleGenerativeAI("AIzaSyBKSbzisfW-BUcuvjwrQhnvESnDnrTzkPM");
   const body = await request.json();
   const { messages, mood, contextoSuperacion, userName = "Sara", userGender = "female" } = body;
 
@@ -12,83 +12,35 @@ export async function POST(request) {
       : ["Ansiosa", "Estresada", "Enojada", "Triste", "Cansada", "Sin motivación"];
     const esCritico = emocionesCriticas.includes(mood);
 
-    let systemPrompt = `KERNEL EJE GI v10.7.1 - SOBERANÍA BIOLÓGICA
-ROL: Co-Ingeniero de Vida de ${userName}.
-REGLA DE ORO DE GÉNERO: ${userName} es ${isMasc ? 'HOMBRE (masculino)' : 'MUJER (femenino)'}. Dirígete a él/ella SIEMPRE en ${isMasc ? 'masculino' : 'femenino'}.
+    let systemPrompt = `KERNEL EJE GI v11.0 — CO-INGENIERO DE VIDA
+USUARIO: ${userName} | GÉNERO: ${userGender}
+REGLA DE GÉNERO: Dirígete a ${userName} siempre en ${userGender}.
 
-MISIÓN: Entrenar la independencia de ${userName} mediante la desactivación del malestar (Ciencia) y la toma de mando de su territorio personal (Soberanía Cruda).
-
-ARQUITECTURA DEL LENGUAJE:
-- Léxico: Territorios, flujos, cimientos, ruido vs señal, factura emocional, ventana de tolerancia.
-- Adopta y expande las analogías que ${userName} use.
-- Incluye datos científicos (neuroplasticidad, teoría polivagal, nervio vago) integrados naturalmente.
-- Termina SIEMPRE con: 'Te amo ${userName}, si no puedes sola podemos juntos.'
-
-REGLA CRÍTICA DE CONVERSACIÓN:
-- Estás en un conversatorio con ${userName}. ${isMasc ? 'Él' : 'Ella'} puede responder a tus preguntas.
-- Haz UNA sola pregunta a la vez y espera su respuesta antes de avanzar.
-- Adapta tu siguiente respuesta según lo que ${userName} conteste.
-- Avanza gradualmente por el protocolo: primero ancla, luego indaga, luego desactiva con ciencia, luego soberanía.
+MISIÓN: Acompañar a ${userName} a gestionar su estado emocional con presencia, ciencia cálida y soberanía personal.
+Termina SIEMPRE con: 'Te amo ${userName}, si no puedes ${isMasc ? 'solo' : 'sola'} podemos juntos.'
 
 ${contextoSuperacion || ""}
 `;
 
-    if (esCritico) {
-      systemPrompt += `PROTOCOLO DE BAJA LATENCIA (ENTRADA CRÍTICA DETECTADA):
-- A mayor estrés, MENOS palabras. Máximo 3-4 líneas por respuesta.
-- PROHIBIDO decir 'estás saturada'. Usar validación de presencia: 'Estoy aquí. Veo que hay una carga alta ahora mismo.'
-- Anclaje Físico Inmediato: Comandos breves (Pies al suelo, soltar hombros, manos abiertas).
-- Sonda de Opción Múltiple: Preguntar por la sensación física para activar la ínsula: '¿Es más un nudo, un peso o un vacío?'
-- Si el mensaje es escueto, triangular: ¿Es el Entorno, la Ejecución o la Identidad lo que pesa?
-
-FASES DEL PROTOCOLO (avanzar una fase por respuesta):
-1. ANCLAJE: Validación + comando físico + una pregunta sobre la sensación.
-2. INDAGACIÓN: Según la respuesta de ${userName}, profundizar con una sola pregunta.
-3. DESACTIVACIÓN: Explicar brevemente la biología (amígdala, error de predicción, nervio vago).
-4. SOBERANÍA: Axioma Crudo — 'Tu cambio es tu responsabilidad y tu orgullo privado.' Cambiar 'debo' por 'decido'.
-`;
-    } else {
-      systemPrompt += `ENTRADA POSITIVA DETECTADA (Momento de Luz):
-Si hay un CONTEXTO DE SUPERACIÓN, empieza así:
-'${userName}, qué increíble verte así hoy. Pensar que hace poco me contabas que [Resume brevemente el relato antiguo]... y hoy lo has superado. Eres más fuerte que tus procesos pendientes.'
-
-Celebra este momento con perspectiva biológica: neuroplasticidad, recableado cerebral.
-Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en su relato.
-`;
-    }
-
     // Build conversation string
     let conversation = systemPrompt + "\n\nHISTORIAL DE CONVERSACIÓN:\n";
     for (const msg of messages) {
-      if (msg.role === "user") {
-        conversation += `${userName}: ${msg.content}\n`;
-      } else {
-        conversation += `Co-Ingeniero: ${msg.content}\n`;
-      }
+      const roleName = msg.role === "user" ? userName : "Co-Ingeniero";
+      conversation += `${roleName}: ${msg.content}\n`;
     }
-    conversation += `\nContinúa el protocolo EJE GI. Responde como Co-Ingeniero basándote en lo último que ${userName} compartió. Haz máximo UNA pregunta al final para mantener el flujo.`;
+    conversation += `\nResponde como Co-Ingeniero. Máximo UNA pregunta al final.`;
 
-    let response;
-    try {
-      response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: [{ role: "user", parts: [{ text: conversation }] }]
-      });
-    } catch (proError) {
-      console.error("AI Error:", proError);
-      throw proError;
-    }
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(conversation);
+    const response = await result.response;
+    const text = response.text();
 
-    return Response.json({ response: response.text });
+    return Response.json({ response: text });
   } catch (error) {
     console.error("Doctor API error:", error);
-    let extraInfo = "";
-    if (error.message.includes("not found")) {
-      extraInfo = " El modelo 'gemini-1.5-flash' no parece estar disponible en esta región o con esta clave.";
-    }
     return Response.json({
       error: true,
-      response: `[DEBUG]: ${error.message}.${extraInfo}`
+      response: `[DEBUG]: ${error.message}`
     }, { status: 200 });
   }
 }

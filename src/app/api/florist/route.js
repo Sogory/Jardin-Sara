@@ -1,7 +1,7 @@
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Type } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(request) {
-  const ai = new GoogleGenAI({ apiKey: "AIzaSyBKSbzisfW-BUcuvjwrQhnvESnDnrTzkPM" });
+  const genAI = new GoogleGenerativeAI("AIzaSyBKSbzisfW-BUcuvjwrQhnvESnDnrTzkPM");
   try {
     const body = await request.json();
     const { input, existingPlants, userName = "Sara" } = body;
@@ -15,37 +15,15 @@ Tu trabajo es:
 
 Responde SIEMPRE con este esquema JSON estricto.`;
 
-    let response;
-    try {
-      response = await ai.models.generateContent({ 
-        model: "gemini-1.5-flash-exp",
-        contents: [{ role: "user", parts: [{ text: prompt }] }]
-      });
-    } catch (proError) {
-      console.error("AI Error:", proError);
-      throw proError;
-    }
-
-    const text = response.text;
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
     const data = JSON.parse(text.replace(/```json/g, '').replace(/```/g, '').trim());
     return Response.json(data);
   } catch (error) {
     console.error("Florist API error:", error);
-
-    // Fallback de seguridad
-    let userName = "Sara";
-    try {
-      const body = await request.clone().json();
-      if (body.userName) {
-        userName = body.userName;
-      }
-    } catch (e) {
-      // Silenciamos el error si el request no se puede clonar o parsear
-    }
-
-    return Response.json({
-      error: true,
-      msg: `Sogory está en el bosque buscando semillas para ${userName}, intenta de nuevo.`
-    });
+    return Response.json({ error: true, response: error.message }, { status: 500 });
   }
 }
