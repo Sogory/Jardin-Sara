@@ -367,6 +367,7 @@ export default function Home() {
           setGlobalMood={setGlobalMood} 
           profile={profile} 
           userGender={userGender}
+          userName={activePrefs.name}
           userEmoji={activePrefs.emoji}
           g={g}
         />
@@ -1155,7 +1156,7 @@ function TabSaber({ addXp, showToast, profile }) {
 }
 
 // ===== TAB: DOCTOR =====
-function TabDoctor({ showToast, globalMood, setGlobalMood, profile, userGender, userEmoji, g }) {
+function TabDoctor({ showToast, globalMood, setGlobalMood, profile, userGender, userName, userEmoji, g }) {
   const [relato, setRelato] = useState('');
   const [messages, setMessages] = useState([]);
   const [active, setActive] = useState(false);
@@ -1172,7 +1173,7 @@ function TabDoctor({ showToast, globalMood, setGlobalMood, profile, userGender, 
           messages: msgs, 
           mood: globalMood, 
           contextoSuperacion: '',
-          userName: activePrefs.name,
+          userName: userName,
           userGender: userGender
         })
       });
