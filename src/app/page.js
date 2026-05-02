@@ -367,6 +367,7 @@ export default function Home() {
           setGlobalMood={setGlobalMood} 
           profile={profile} 
           userGender={userGender}
+          userEmoji={activePrefs.emoji}
           g={g}
         />
       )}
@@ -1154,7 +1155,7 @@ function TabSaber({ addXp, showToast, profile }) {
 }
 
 // ===== TAB: DOCTOR =====
-function TabDoctor({ showToast, globalMood, setGlobalMood, profile, userGender, g }) {
+function TabDoctor({ showToast, globalMood, setGlobalMood, profile, userGender, userEmoji, g }) {
   const [relato, setRelato] = useState('');
   const [messages, setMessages] = useState([]);
   const [active, setActive] = useState(false);
@@ -1240,7 +1241,7 @@ function TabDoctor({ showToast, globalMood, setGlobalMood, profile, userGender, 
         <div className="chat-container" style={{ marginTop: '12px' }}>
           {messages.map((m, i) => (
             <div key={i} className={`chat-msg ${m.role}`}>
-              <span className="avatar">{m.role === 'user' ? '🌸' : '🌿'}</span>
+              <span className="avatar">{m.role === 'user' ? userEmoji : '🌿'}</span>
               {m.content}
             </div>
           ))}
