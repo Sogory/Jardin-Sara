@@ -71,7 +71,7 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
     let response;
     try {
       response = await ai.models.generateContent({
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-2.0-flash",
         contents: [{ role: "user", parts: [{ text: conversation }] }]
       });
     } catch (proError) {
@@ -82,9 +82,13 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
     return Response.json({ response: response.text });
   } catch (error) {
     console.error("Doctor API error:", error);
+    let extraInfo = "";
+    if (error.message.includes("not found")) {
+      extraInfo = " El modelo 'gemini-2.0-flash' no parece estar disponible en esta región o con esta clave.";
+    }
     return Response.json({
       error: true,
-      response: `[DEBUG]: ${error.message}.`
+      response: `[DEBUG]: ${error.message}.${extraInfo}`
     }, { status: 200 });
   }
 }
