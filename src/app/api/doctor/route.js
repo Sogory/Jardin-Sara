@@ -68,37 +68,37 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
     }
     conversation += `\nContinúa el protocolo EJE GI. Responde como Co-Ingeniero basándote en lo último que ${userName} compartió. Haz máximo UNA pregunta al final para mantener el flujo.`;
 
-    let response;
+    let text;
     try {
-      response = await ai.models.generateContent({
+      const model = ai.getGenerativeModel({ 
         model: "gemini-1.5-pro",
-        contents: conversation,
-        config: {
-          safetySettings: [
-            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          ]
-        }
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        ]
       });
+      const result = await model.generateContent(conversation);
+      const response = await result.response;
+      text = response.text();
     } catch (proError) {
-      console.warn("Pro model failed, falling back to Flash Lite:", proError.message);
-      response = await ai.models.generateContent({
+      console.warn("Pro model failed, falling back to Flash:", proError.message);
+      const model = ai.getGenerativeModel({ 
         model: "gemini-1.5-flash",
-        contents: conversation,
-        config: {
-          safetySettings: [
-            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          ]
-        }
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        ]
       });
+      const result = await model.generateContent(conversation);
+      const response = await result.response;
+      text = response.text();
     }
 
-    return Response.json({ response: response.text });
+    return Response.json({ response: text });
   } catch (error) {
     console.error("Doctor API error:", error);
     return Response.json({

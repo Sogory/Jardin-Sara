@@ -15,81 +15,39 @@ Tu trabajo es:
 
 Responde SIEMPRE con este esquema JSON estricto.`;
 
-    let response;
+    let text;
     try {
-      response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              msg: { type: Type.STRING, description: `Mensaje de Sogory para ${userName}` },
-              isNew: { type: Type.BOOLEAN },
-              plantId: { type: Type.STRING },
-              newPlant: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING },
-                  emoji: { type: Type.STRING },
-                  name: { type: Type.STRING },
-                  cost: { type: Type.INTEGER },
-                  desc: { type: Type.STRING },
-                  waterEvery: { type: Type.INTEGER },
-                  waterCost: { type: Type.INTEGER }
-                }
-              }
-            },
-            required: ["msg", "isNew", "plantId"]
-          },
-          safetySettings: [
-            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          ]
-        }
+      const model = ai.getGenerativeModel({ 
+        model: "gemini-1.5-pro",
+        generationConfig: { responseMimeType: "application/json" },
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        ]
       });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      text = response.text();
     } catch (proError) {
-      console.warn("Pro model failed, falling back to Flash Lite:", proError.message);
-      response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite-preview",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              msg: { type: Type.STRING, description: `Mensaje de Sogory para ${userName}` },
-              isNew: { type: Type.BOOLEAN },
-              plantId: { type: Type.STRING },
-              newPlant: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING },
-                  emoji: { type: Type.STRING },
-                  name: { type: Type.STRING },
-                  cost: { type: Type.INTEGER },
-                  desc: { type: Type.STRING },
-                  waterEvery: { type: Type.INTEGER },
-                  waterCost: { type: Type.INTEGER }
-                }
-              }
-            },
-            required: ["msg", "isNew", "plantId"]
-          },
-          safetySettings: [
-            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          ]
-        }
+      console.warn("Pro model failed, falling back to Flash:", proError.message);
+      const model = ai.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        generationConfig: { responseMimeType: "application/json" },
+        safetySettings: [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        ]
       });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      text = response.text();
     }
 
-    const data = JSON.parse(response.text);
+    const data = JSON.parse(text);
     return Response.json(data);
   } catch (error) {
     console.error("Florist API error:", error);
