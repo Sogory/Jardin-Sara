@@ -2,9 +2,10 @@ import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 
 export async function POST(request) {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  try {
-    const { messages, mood, contextoSuperacion, userName = "Sara" } = await request.json();
+  const body = await request.json();
+  const { messages, mood, contextoSuperacion, userName = "Sara" } = body;
 
+  try {
     const emocionesCriticas = ["Ansiosa", "Estresada", "Enojada", "Triste", "Cansada", "Sin motivación"];
     const esCritico = emocionesCriticas.includes(mood);
 
@@ -60,28 +61,42 @@ Genera un ritual de Pequeña Sintonía único, breve (máximo 3 min) basado en s
         conversation += `Co-Ingeniero: ${msg.content}\n`;
       }
     }
-    conversation += "\nContinúa el protocolo EJE GI. Responde como Co-Ingeniero basándote en lo último que Sara compartió. Haz máximo UNA pregunta al final para mantener el flujo.";
+    conversation += `\nContinúa el protocolo EJE GI. Responde como Co-Ingeniero basándote en lo último que ${userName} compartió. Haz máximo UNA pregunta al final para mantener el flujo.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: conversation,
-      config: {
-        safetySettings: [
-          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        ]
-      }
-    });
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: "gemini-3.1-pro-preview",
+        contents: conversation,
+        config: {
+          safetySettings: [
+            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          ]
+        }
+      });
+    } catch (proError) {
+      console.warn("Pro model failed, falling back to Flash Lite:", proError.message);
+      response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite-preview",
+        contents: conversation,
+        config: {
+          safetySettings: [
+            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          ]
+        }
+      });
+    }
 
     return Response.json({ response: response.text });
   } catch (error) {
     console.error("Doctor API error:", error);
-    const { userName = "Sara" } = await (async () => {
-      try { return await request.clone().json(); } catch(e) { return {}; }
-    })();
-    return Response.json({ 
+    return Response.json({
       error: true,
       response: `Lo siento, ${userName}. El sistema está descansando un momento. Intenta de nuevo en unos minutos. 🌿\n\nMientras tanto: pies al suelo, hombros sueltos, tres respiraciones profundas.\n\nTe amo ${userName}, si no puedes sola podemos juntos.`
     }, { status: 200 });

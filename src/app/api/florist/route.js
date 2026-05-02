@@ -3,8 +3,9 @@ import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Type } from "@google/gen
 export async function POST(request) {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   try {
-    const { input, existingPlants, userName = "Sara" } = await request.json();
-    
+    const body = await request.json();
+    const { input, existingPlants, userName = "Sara" } = body;
+
     const prompt = `Eres Sogory, el místico florista del Jardín de ${userName}. ${userName} busca una flor basada en esto: "${input}".
 Catálogo actual: ${existingPlants.map(p => p.name).join(', ')}.
 
@@ -14,49 +15,97 @@ Tu trabajo es:
 
 Responde SIEMPRE con este esquema JSON estricto.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            msg: { type: Type.STRING, description: `Mensaje de Sogory para ${userName}` },
-            isNew: { type: Type.BOOLEAN },
-            plantId: { type: Type.STRING },
-            newPlant: {
-              type: Type.OBJECT,
-              properties: {
-                id: { type: Type.STRING },
-                emoji: { type: Type.STRING },
-                name: { type: Type.STRING },
-                cost: { type: Type.INTEGER },
-                desc: { type: Type.STRING },
-                waterEvery: { type: Type.INTEGER },
-                waterCost: { type: Type.INTEGER }
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: "gemini-3.1-pro-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              msg: { type: Type.STRING, description: `Mensaje de Sogory para ${userName}` },
+              isNew: { type: Type.BOOLEAN },
+              plantId: { type: Type.STRING },
+              newPlant: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING },
+                  emoji: { type: Type.STRING },
+                  name: { type: Type.STRING },
+                  cost: { type: Type.INTEGER },
+                  desc: { type: Type.STRING },
+                  waterEvery: { type: Type.INTEGER },
+                  waterCost: { type: Type.INTEGER }
+                }
               }
-            }
+            },
+            required: ["msg", "isNew", "plantId"]
           },
-          required: ["msg", "isNew", "plantId"]
-        },
-        safetySettings: [
-          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        ]
-      }
-    });
+          safetySettings: [
+            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          ]
+        }
+      });
+    } catch (proError) {
+      console.warn("Pro model failed, falling back to Flash Lite:", proError.message);
+      response = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              msg: { type: Type.STRING, description: `Mensaje de Sogory para ${userName}` },
+              isNew: { type: Type.BOOLEAN },
+              plantId: { type: Type.STRING },
+              newPlant: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.STRING },
+                  emoji: { type: Type.STRING },
+                  name: { type: Type.STRING },
+                  cost: { type: Type.INTEGER },
+                  desc: { type: Type.STRING },
+                  waterEvery: { type: Type.INTEGER },
+                  waterCost: { type: Type.INTEGER }
+                }
+              }
+            },
+            required: ["msg", "isNew", "plantId"]
+          },
+          safetySettings: [
+            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          ]
+        }
+      });
+    }
 
     const data = JSON.parse(response.text);
     return Response.json(data);
   } catch (error) {
     console.error("Florist API error:", error);
-    const { userName = "Sara" } = await (async () => {
-      try { return await request.clone().json(); } catch(e) { return {}; }
-    })();
-    return Response.json({ 
+
+    // Fallback de seguridad
+    let userName = "Sara";
+    try {
+      const body = await request.clone().json();
+      if (body.userName) {
+        userName = body.userName;
+      }
+    } catch (e) {
+      // Silenciamos el error si el request no se puede clonar o parsear
+    }
+
+    return Response.json({
       error: true,
       msg: `Sogory está en el bosque buscando semillas para ${userName}, intenta de nuevo.`
     });

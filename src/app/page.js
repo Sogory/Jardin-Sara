@@ -553,6 +553,7 @@ function TabJardin({ xp, addXp, showToast, globalMood, profile }) {
   };
 
   const waterPlant = async (plant) => {
+    const isSara = profile === 'sara';
     const def = ALL_PLANTS.find(x => x.id === plant.plant_type);
     if (!def) return;
     if (xp < def.waterCost) { showToast(`Necesitas ${def.waterCost} XP para regar 💧`); return; }
@@ -560,7 +561,7 @@ function TabJardin({ xp, addXp, showToast, globalMood, profile }) {
     await addXp(-def.waterCost);
     await supabase.from('garden').update({ health: newHealth, last_watered: new Date().toISOString() }).eq('id', plant.id);
     setGarden(g => g.map(p => p.id === plant.id ? { ...p, health: newHealth, last_watered: new Date().toISOString() } : p));
-    showToast(`💧 ${plant.name} te lo agradece, Sara.`);
+    showToast(`💧 ${plant.name} te lo agradece, ${isSara ? 'Sara' : 'Allen'}.`);
   };
 
   const buyPlant = async (def) => {
@@ -602,7 +603,8 @@ function TabJardin({ xp, addXp, showToast, globalMood, profile }) {
       setFloristLoading(false);
     } catch (e) {
       const fallbackPlant = ALL_PLANTS.filter(p => !hiddenPlants.includes(p.id))[0] || ALL_PLANTS[0];
-      setFloristMsg(`Sogory salió un momento a buscar agua. Pero yo te recomendaría un ${fallbackPlant?.name || 'Girasol'} para iluminar el día.`);
+      const userName = profile.charAt(0).toUpperCase() + profile.slice(1);
+      setFloristMsg(`Sogory salió un momento a buscar agua, ${userName}. Pero yo te recomendaría un ${fallbackPlant?.name || 'Girasol'} para iluminar el día.`);
       setFloristLoading(false);
     }
   };
@@ -735,21 +737,23 @@ function TabJardin({ xp, addXp, showToast, globalMood, profile }) {
         globalMood={globalMood}
         setGarden={setGarden}
         setHerbario={setHerbario}
+        profile={profile}
       />}
     </div>
   );
 }
 
-function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, setGarden, setHerbario }) {
+function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, setGarden, setHerbario, profile }) {
+  const isSara = profile === 'sara';
   const def = SHOP_PLANTS.find(x => x.id === plant.plant_type) || {};
   const emoji = def.emoji || '🌱';
   const name = plant.name || 'Planta Misteriosa';
   const hoursPassed = (Date.now() - new Date(plant.last_watered).getTime()) / 3600000;
 
   let statusMsg = "";
-  if (globalMood === "Triste") statusMsg = "Mis espinas hoy son tu escudo, Sara. Respira conmigo.";
+  if (globalMood === "Triste") statusMsg = `Mis espinas hoy son tu escudo, ${isSara ? 'Sara' : 'Allen'}. Respira conmigo.`;
   else if (globalMood === "Feliz") statusMsg = "¡Qué rico solecito! Estoy vibrando con tu alegría.";
-  else if (globalMood === "Ansiosa") statusMsg = "Siente mi calma, Sara. Yo solo crezco, sin prisas.";
+  else if (globalMood === "Ansiosa") statusMsg = `Siente mi calma, ${isSara ? 'Sara' : 'Allen'}. Yo solo crezco, sin prisas.`;
   else if (globalMood === "Estresada") statusMsg = "Una gota a la vez, como mi riego. Todo estará bien.";
   else {
     if (plant.health === 0) statusMsg = "Estoy sequita... Necesito magia (Abono) para revivir.";
@@ -1070,6 +1074,7 @@ function TabLogros({ addXp, showToast, profile }) {
   }, [profile]);
 
   const celebrate = async () => {
+    const isSara = profile === 'sara';
     if (!logroText.trim() || !profile) return;
     try {
       const { data } = await supabase.from('achievements').insert({
@@ -1078,7 +1083,7 @@ function TabLogros({ addXp, showToast, profile }) {
       await addXp(15);
       if (data) setLogros([data, ...logros]);
       setLogroText('');
-      showToast('🌟 ¡Bien hecho, Sara! +15 XP');
+      showToast(`🌟 ¡Bien hecho, ${isSara ? 'Sara' : 'Allen'}! +15 XP`);
     } catch (e) {
       showToast('Error al guardar');
     }
@@ -1108,7 +1113,7 @@ function TabLogros({ addXp, showToast, profile }) {
       )}
 
       {logros.length === 0 && (
-        <div className="empty-state"><span className="empty-icon">🌟</span>Aquí guardaremos cada<br />pequeña victoria tuya, Sara.</div>
+        <div className="empty-state"><span className="empty-icon">🌟</span>Aquí guardaremos cada<br />pequeña victoria tuya, {profile === 'sara' ? 'Sara' : 'Allen'}.</div>
       )}
     </div>
   );
