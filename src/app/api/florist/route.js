@@ -1,7 +1,7 @@
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Type } from "@google/genai";
 
 export async function POST(request) {
-  const ai = new GoogleGenAI("AIzaSyBKSbzisfW-BUcuvjwrQhnvESnDnrTzkPM");
+  const ai = new GoogleGenAI({ apiKey: "AIzaSyBKSbzisfW-BUcuvjwrQhnvESnDnrTzkPM" });
   try {
     const body = await request.json();
     const { input, existingPlants, userName = "Sara" } = body;
@@ -15,39 +15,19 @@ Tu trabajo es:
 
 Responde SIEMPRE con este esquema JSON estricto.`;
 
-    let text;
+    let response;
     try {
-      const model = ai.getGenerativeModel({ 
-        model: "gemini-1.5-pro",
-        generationConfig: { responseMimeType: "application/json" },
-        safetySettings: [
-          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        ]
-      });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      text = response.text();
-    } catch (proError) {
-      console.warn("Pro model failed, falling back to Flash:", proError.message);
-      const model = ai.getGenerativeModel({ 
+      response = await ai.models.generateContent({ 
         model: "gemini-1.5-flash",
-        generationConfig: { responseMimeType: "application/json" },
-        safetySettings: [
-          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        ]
+        contents: [{ role: "user", parts: [{ text: prompt }] }]
       });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      text = response.text();
+    } catch (proError) {
+      console.error("AI Error:", proError);
+      throw proError;
     }
 
-    const data = JSON.parse(text);
+    const text = response.text;
+    const data = JSON.parse(text.replace(/```json/g, '').replace(/```/g, '').trim());
     return Response.json(data);
   } catch (error) {
     console.error("Florist API error:", error);
