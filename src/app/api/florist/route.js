@@ -18,7 +18,7 @@ Responde SIEMPRE con este esquema JSON estricto.`;
     let response;
     try {
       response = await ai.models.generateContent({ 
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-1.5-flash-exp",
         contents: [{ role: "user", parts: [{ text: prompt }] }]
       });
     } catch (proError) {
