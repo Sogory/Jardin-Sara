@@ -103,12 +103,24 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load XP when profile changes
+  // Load Profile Data and XP when profile changes
   useEffect(() => {
     if (!profile) return;
-    supabase.from('user_stats').select('xp_total').eq('user_id', profile).single().then(({ data, error }) => {
-      if (data && !error) setXp(data.xp_total);
-    }).catch(() => { });
+    const loadProfileData = async () => {
+      try {
+        const { data, error } = await supabase.from('user_stats').select('*').eq('user_id', profile).single();
+        if (data && !error) {
+          setXp(data.xp_total);
+          const newPrefs = {
+            name: data.user_name || (profile === 'sara' ? 'Sara' : 'Allen'),
+            emoji: data.user_emoji || (profile === 'sara' ? '🌸' : '🌿'),
+            gender: data.user_gender || (profile === 'sara' ? 'female' : 'male')
+          };
+          setProfilePrefs(prev => ({ ...prev, [profile]: newPrefs }));
+        }
+      } catch (e) { }
+    };
+    loadProfileData();
     fetchTomorrowTasks();
   }, [profile]);
 
@@ -260,10 +272,20 @@ export default function Home() {
   const userGender = activePrefs.gender;
   const g = (fem, masc) => userGender === 'male' ? masc : fem;
 
-  const savePrefs = (id, newPrefs) => {
+  const savePrefs = async (id, newPrefs) => {
     const updated = { ...profilePrefs, [id]: newPrefs };
     setProfilePrefs(updated);
     localStorage.setItem('jardin_profile_prefs', JSON.stringify(updated));
+    
+    // Sync to Supabase
+    try {
+      await supabase.from('user_stats').update({
+        user_name: newPrefs.name,
+        user_emoji: newPrefs.emoji,
+        user_gender: newPrefs.gender
+      }).eq('user_id', id);
+    } catch (e) { }
+    
     setEditingProfile(null);
   };
 
