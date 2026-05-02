@@ -1,7 +1,7 @@
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold, Type } from "@google/genai";
 
 export async function POST(request) {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const ai = new GoogleGenAI("AIzaSyBKSbzisfW-BUcuvjwrQhnvESnDnrTzkPM");
   try {
     const body = await request.json();
     const { input, existingPlants, userName = "Sara" } = body;
