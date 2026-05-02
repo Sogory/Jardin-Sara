@@ -7,7 +7,7 @@ export async function POST(request) {
 
   try {
     // 1. Intentamos hablar con el modelo
-    const model = genAI.getGenerativeModel({ model: "gemini-3-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     
     let conversation = `Usuario: ${userName}\nMood: ${mood}\nHistorial:\n`;
     for (const msg of messages) {
@@ -30,7 +30,7 @@ export async function POST(request) {
 
     return Response.json({
       error: true,
-      response: `[DIAGNÓSTICO]: Tu clave no reconoce 'gemini-3-flash'. Error: ${error.message}. Por favor, prueba a usar 'gemini-pro' o verifica tu clave en AI Studio.`
+      response: `[DIAGNÓSTICO]: Tu clave no reconoce 'gemini-2.0-flash'. Error: ${error.message}. Por favor, prueba a usar 'gemini-pro' o verifica tu clave en AI Studio.`
     }, { status: 200 });
   }
 }
