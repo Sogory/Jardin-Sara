@@ -10,7 +10,7 @@ export async function POST(request) {
     Si es clara, devuelve "pasos" (array de strings).
     Devuelve SIEMPRE este JSON: {"necesita_contexto": boolean, "pregunta": string, "pasos": string[]}`;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash" });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
