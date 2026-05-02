@@ -25,15 +25,34 @@ const CURIOSIDADES = [
   { id: 'c8', cat: 'plantas', catColor: '#0F6E56', emoji: '🌺', title: 'Las flores se comunican por el suelo', body: 'Las plantas emiten señales químicas a través de redes de hongos subterráneos llamadas micorrizas o "internet del bosque".' },
 ];
 
-const MOODS = ["Cansada", "Ansiosa", "Triste", "Sin motivación", "Feliz", "Estresada", "Enojada"];
-const PLACEHOLDERS = {
-  Feliz: "¿Qué encendió tu chispa hoy? Cuéntame ese destello...",
-  Ansiosa: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
-  Estresada: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
-  Enojada: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
-  Cansada: "Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
-  Triste: "Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
-  "Sin motivación": "Cuéntame qué te pesa, te escucho... Aquí puedes descansar."
+const MOODS = (gender) => {
+  const isMasc = gender === 'male';
+  return [
+    isMasc ? "Cansado" : "Cansada",
+    isMasc ? "Ansioso" : "Ansiosa",
+    "Triste",
+    "Sin motivación",
+    "Feliz",
+    isMasc ? "Estresado" : "Estresada",
+    isMasc ? "Enojado" : "Enojada"
+  ];
+};
+
+const PLACEHOLDERS = (gender) => {
+  const isMasc = gender === 'male';
+  return {
+    Feliz: "¿Qué encendió tu chispa hoy? Cuéntame ese destello...",
+    Ansiosa: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+    Ansioso: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+    Estresada: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+    Estresado: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+    Enojada: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+    Enojado: "Sácalo todo aquí, vacía tu sistema... No hay juicio.",
+    Cansada: "Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
+    Cansado: "Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
+    Triste: "Cuéntame qué te pesa, te escucho... Aquí puedes descansar.",
+    "Sin motivación": "Cuéntame qué te pesa, te escucho... Aquí puedes descansar."
+  };
 };
 
 // ===== MAIN APP =====
@@ -52,6 +71,13 @@ export default function Home() {
   const [tomorrowTasks, setTomorrowTasks] = useState([]);
   const [triggerTask, setTriggerTask] = useState(null);
 
+  // Perfil Prefs
+  const [profilePrefs, setProfilePrefs] = useState({
+    sara: { name: 'Sara', emoji: '🌸', gender: 'female' },
+    allen: { name: 'Allen', emoji: '🌿', gender: 'male' }
+  });
+  const [editingProfile, setEditingProfile] = useState(null); // 'sara' or 'allen'
+
   // Mark as mounted and initialize auth
   useEffect(() => {
     setMounted(true);
@@ -63,6 +89,12 @@ export default function Home() {
         if (savedProfile) setProfile(savedProfile);
       }
     });
+
+    // Load Prefs
+    const savedPrefs = localStorage.getItem('jardin_profile_prefs');
+    if (savedPrefs) {
+      try { setProfilePrefs(JSON.parse(savedPrefs)); } catch (e) { }
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -158,19 +190,64 @@ export default function Home() {
         <h1 className="profile-title">¿Quién eres hoy?</h1>
         <p className="profile-subtitle">Tu jardín personal te espera.</p>
         <div className="profile-cards">
-          <div className="profile-card sara" onClick={() => selectProfile('sara')}>
-            <span className="profile-emoji">🌸</span>
-            <div className="profile-name">Sara</div>
-            <div className="profile-desc">Un pasito a la vez.</div>
-            <button className="profile-btn sara" style={{marginTop: 'auto'}}>Entrar</button>
-          </div>
-          <div className="profile-card allen" onClick={() => selectProfile('allen')}>
-            <span className="profile-emoji">🌿</span>
-            <div className="profile-name">Allen</div>
-            <div className="profile-desc">Tu espacio privado.</div>
-            <button className="profile-btn allen" style={{marginTop: 'auto'}}>Entrar</button>
-          </div>
+          {['sara', 'allen'].map(id => (
+            <div key={id} className={`profile-card ${id}`} onClick={() => selectProfile(id)} style={{ position: 'relative' }}>
+              <button 
+                className="edit-profile-mini" 
+                onClick={(e) => { e.stopPropagation(); setEditingProfile(id); }}
+                style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.2)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', color: 'white', fontSize: '14px', cursor: 'pointer', z-index: 10 }}
+              >
+                ⚙️
+              </button>
+              <span className="profile-emoji">{profilePrefs[id].emoji}</span>
+              <div className="profile-name">{profilePrefs[id].name}</div>
+              <div className="profile-desc">{id === 'sara' ? 'Un pasito a la vez.' : 'Tu espacio privado.'}</div>
+              <button className={`profile-btn ${id}`} style={{marginTop: 'auto'}}>Entrar</button>
+            </div>
+          ))}
         </div>
+
+        {/* EDIT MODAL */}
+        {editingProfile && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <button className="modal-close" onClick={() => setEditingProfile(null)}>×</button>
+              <h3 style={{ marginBottom: '15px' }}>Configurar Perfil</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text2)', display: 'block', marginBottom: '4px' }}>Nombre</label>
+                  <input 
+                    className="input-field" 
+                    value={profilePrefs[editingProfile].name} 
+                    onChange={e => setProfilePrefs({...profilePrefs, [editingProfile]: {...profilePrefs[editingProfile], name: e.target.value}})}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text2)', display: 'block', marginBottom: '4px' }}>Emoji</label>
+                  <input 
+                    className="input-field" 
+                    value={profilePrefs[editingProfile].emoji} 
+                    onChange={e => setProfilePrefs({...profilePrefs, [editingProfile]: {...profilePrefs[editingProfile], emoji: e.target.value}})}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text2)', display: 'block', marginBottom: '4px' }}>Género / Tratamiento</label>
+                  <select 
+                    className="select-field"
+                    value={profilePrefs[editingProfile].gender}
+                    onChange={e => setProfilePrefs({...profilePrefs, [editingProfile]: {...profilePrefs[editingProfile], gender: e.target.value}})}
+                  >
+                    <option value="female">Femenino</option>
+                    <option value="male">Masculino</option>
+                  </select>
+                </div>
+                <button className="btn-blue" onClick={() => savePrefs(editingProfile, profilePrefs[editingProfile])} style={{ marginTop: '10px' }}>
+                  Guardar Cambios
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <button onClick={handleLogout} style={{ marginTop: '40px', background: 'transparent', border: 'none', color: 'var(--text3)', textDecoration: 'underline', cursor: 'pointer' }}>
           Cerrar Sesión Maestra
         </button>
@@ -178,7 +255,17 @@ export default function Home() {
     );
   }
 
+  const activePrefs = profilePrefs[profile] || { name: profile, emoji: '👤', gender: 'female' };
   const isSara = profile === 'sara';
+  const userGender = activePrefs.gender;
+  const g = (fem, masc) => userGender === 'male' ? masc : fem;
+
+  const savePrefs = (id, newPrefs) => {
+    const updated = { ...profilePrefs, [id]: newPrefs };
+    setProfilePrefs(updated);
+    localStorage.setItem('jardin_profile_prefs', JSON.stringify(updated));
+    setEditingProfile(null);
+  };
 
   const bringToToday = async (task) => {
     // Remove from tomorrow and trigger in today
@@ -221,11 +308,11 @@ export default function Home() {
         <button className={`tomorrow-sky-toggle ${showSky ? 'active' : ''}`} onClick={() => setShowSky(!showSky)}>
           {showSky ? '✨' : '🌙'}
         </button>
-        <span className="hero-icon">{isSara ? '🌸' : '🌿'}</span>
-        <h1>Hola, {isSara ? 'Sara' : 'Allen'} {isSara ? '🌸' : '🌿'}</h1>
+        <span className="hero-icon">{activePrefs.emoji}</span>
+        <h1>Hola, {activePrefs.name} {activePrefs.emoji}</h1>
         <p>Un pasito a la vez. Sin prisa, sin culpa.</p>
         <button className="hero-profile-badge" onClick={() => setProfile(null)}>
-          {isSara ? '🌸 Perfil Sara' : '🌿 Perfil Allen'} ▾
+          {activePrefs.emoji} Perfil {activePrefs.name} ▾
         </button>
       </div>
 
@@ -251,8 +338,26 @@ export default function Home() {
       )}
       {activeTab === 'jardin' && <TabJardin xp={xp} addXp={addXp} showToast={showToast} globalMood={globalMood} profile={profile} />}
       {activeTab === 'saber' && <TabSaber xp={xp} addXp={addXp} showToast={showToast} profile={profile} />}
-      {activeTab === 'doctor' && <TabDoctor showToast={showToast} globalMood={globalMood} setGlobalMood={setGlobalMood} profile={profile} />}
-      {activeTab === 'logros' && <TabLogros xp={xp} addXp={addXp} showToast={showToast} profile={profile} />}
+      {activeTab === 'doctor' && (
+        <TabDoctor 
+          showToast={showToast} 
+          globalMood={globalMood} 
+          setGlobalMood={setGlobalMood} 
+          profile={profile} 
+          userGender={userGender}
+          g={g}
+        />
+      )}
+      {activeTab === 'logros' && (
+        <TabLogros 
+          xp={xp} 
+          addXp={addXp} 
+          showToast={showToast} 
+          profile={profile} 
+          userGender={userGender}
+          g={g}
+        />
+      )}
 
       {/* Bottom Nav */}
       <nav className="bottom-nav">
@@ -339,8 +444,6 @@ function TabTareas({ xp, addXp, showToast, profile, isSara, onTasksUpdated, trig
         setContextQuestion(data.pregunta);
         setOriginalTask(task);
       } else if (data.pasos && data.pasos.length > 0) {
-        setSteps(data.pasos.slice(0, 10));
-        setStepIndex(0);
         setCompletedSteps([]);
         setNeedsContext(false);
         setCelebration(`🌱 Lo rompimos en pedacitos, ${isSara ? 'Sara' : 'Allen'}. ¡Empieza por el primero!`);
@@ -1029,7 +1132,7 @@ function TabSaber({ addXp, showToast, profile }) {
 }
 
 // ===== TAB: DOCTOR =====
-function TabDoctor({ showToast, globalMood, setGlobalMood, profile }) {
+function TabDoctor({ showToast, globalMood, setGlobalMood, profile, userGender, g }) {
   const [relato, setRelato] = useState('');
   const [messages, setMessages] = useState([]);
   const [active, setActive] = useState(false);
@@ -1046,7 +1149,8 @@ function TabDoctor({ showToast, globalMood, setGlobalMood, profile }) {
           messages: msgs, 
           mood: globalMood, 
           contextoSuperacion: '',
-          userName: profile.charAt(0).toUpperCase() + profile.slice(1)
+          userName: activePrefs.name,
+          userGender: userGender
         })
       });
       const data = await res.json();
@@ -1096,13 +1200,13 @@ function TabDoctor({ showToast, globalMood, setGlobalMood, profile }) {
     <div className="section active">
       {/* Mood selector */}
       <select className="select-field" value={globalMood} onChange={e => setGlobalMood(e.target.value)} style={{ marginBottom: '10px' }}>
-        {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
+        {MOODS(userGender).map(m => <option key={m} value={m}>{m}</option>)}
       </select>
 
       {/* Initial text area */}
       {!active && (
         <>
-          <textarea className="textarea-field" value={relato} onChange={e => setRelato(e.target.value)} placeholder={PLACEHOLDERS[globalMood]} style={{ marginBottom: '10px' }} />
+          <textarea className="textarea-field" value={relato} onChange={e => setRelato(e.target.value)} placeholder={PLACEHOLDERS(userGender)[globalMood]} style={{ marginBottom: '10px' }} />
           <button className="btn-blue" onClick={startConversation} disabled={loading} style={{ width: '100%' }}>
             {loading ? <span className="spinner" /> : 'Iniciar Conversatorio'}
           </button>
@@ -1140,7 +1244,7 @@ function TabDoctor({ showToast, globalMood, setGlobalMood, profile }) {
 }
 
 // ===== TAB: LOGROS =====
-function TabLogros({ addXp, showToast, profile }) {
+function TabLogros({ xp, addXp, showToast, profile, userGender, g }) {
   const [logroText, setLogroText] = useState('');
   const [logros, setLogros] = useState([]);
 
@@ -1152,7 +1256,6 @@ function TabLogros({ addXp, showToast, profile }) {
   }, [profile]);
 
   const celebrate = async () => {
-    const isSara = profile === 'sara';
     if (!logroText.trim() || !profile) return;
     try {
       const { data } = await supabase.from('achievements').insert({
@@ -1161,7 +1264,7 @@ function TabLogros({ addXp, showToast, profile }) {
       await addXp(15);
       if (data) setLogros([data, ...logros]);
       setLogroText('');
-      showToast(`🌟 ¡Bien hecho, ${isSara ? 'Sara' : 'Allen'}! +15 XP`);
+      showToast(`🌟 ¡Bien ${g('hecha', 'hecho')}! +15 XP`);
     } catch (e) {
       showToast('Error al guardar');
     }
@@ -1170,7 +1273,7 @@ function TabLogros({ addXp, showToast, profile }) {
   return (
     <div className="section active">
       <div className="card">
-        <p style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>⭐ ¿De qué te sientes orgullosa hoy?</p>
+        <p style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>⭐ ¿De qué te sientes {g('orgullosa', 'orgulloso')} hoy?</p>
         <textarea className="textarea-field" value={logroText} onChange={e => setLogroText(e.target.value)} placeholder="Escribe aquí tu logro..." style={{ minHeight: '80px', marginBottom: '8px' }} />
         <button className="btn-blue" onClick={celebrate} style={{ width: '100%' }}>¡Me felicito! (+15 XP)</button>
       </div>
@@ -1182,7 +1285,8 @@ function TabLogros({ addXp, showToast, profile }) {
             <div key={l.id} className="log-entry">
               <div className="log-icon">🌟</div>
               <div className="log-text">
-                <strong>{l.description}</strong>
+                <strong>¡Logro desbloqueado!</strong>
+                <div>Te has sentido {g('orgullosa', 'orgulloso')} de: {l.description}</div>
                 <div className="log-time">{l.created_at?.slice(0, 10)} · +{l.xp || 15} XP</div>
               </div>
             </div>
