@@ -1182,7 +1182,7 @@ function TabDoctor({ showToast, globalMood, setGlobalMood, profile, userGender, 
         setMessages(newMsgs);
       }
     } catch (e) {
-      showToast('Error en el sistema');
+      showToast(e.message);
     }
     setLoading(false);
   };
