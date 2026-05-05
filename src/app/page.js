@@ -468,6 +468,7 @@ function TabTareas({ xp, addXp, showToast, profile, isSara, onTasksUpdated, trig
         setContextQuestion(data.pregunta);
         setOriginalTask(task);
       } else if (data.pasos && data.pasos.length > 0) {
+        setSteps(data.pasos);
         setCompletedSteps([]);
         setNeedsContext(false);
         setCelebration(`🌱 Lo rompimos en pedacitos, ${isSara ? 'Sara' : 'Allen'}. ¡Empieza por el primero!`);
