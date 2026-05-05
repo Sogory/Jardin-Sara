@@ -1,36 +1,45 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(request) {
-  const genAI = new GoogleGenerativeAI("AIzaSyBKSbzisfW-BUcuvjwrQhnvESnDnrTzkPM");
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   const body = await request.json();
   const { messages, mood, userName = "Sara", userGender = "female" } = body;
 
-  try {
-    // 1. Intentamos hablar con el modelo
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-    
-    let conversation = `Usuario: ${userName}\nMood: ${mood}\nHistorial:\n`;
-    for (const msg of messages) {
-      conversation += `${msg.role}: ${msg.content}\n`;
-    }
+  // Lista de modelos para probar en orden de prioridad
+  const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+  
+  let lastError = null;
 
-    const result = await model.generateContent(conversation);
-    const response = await result.response;
-    return Response.json({ response: response.text() });
-
-  } catch (error) {
-    console.error("Doctor API error:", error);
-    
-    // 2. DIAGNÓSTICO: Si falla, intentamos ver qué modelos están disponibles
-    let availableModels = "No se pudo obtener la lista.";
+  for (const modelName of modelsToTry) {
     try {
-      // Nota: El SDK estándar no tiene un método directo sencillo para listar, 
-      // pero intentaremos obtener el error más detallado posible.
-    } catch (e) {}
+      const model = genAI.getGenerativeModel({ model: modelName });
+      
+      let conversation = `Usuario: ${userName}\nGénero: ${userGender}\nMood: ${mood}\n\n`;
+      for (const msg of messages) {
+        conversation += `${msg.role === 'user' ? userName : 'Co-Ingeniero'}: ${msg.content}\n`;
+      }
+      conversation += "\nResponde como Co-Ingeniero. Máximo UNA pregunta al final.";
 
-    return Response.json({
-      error: true,
-      response: `[DIAGNÓSTICO]: Tu clave no reconoce 'gemini-2.0-flash'. Error: ${error.message}. Por favor, prueba a usar 'gemini-pro' o verifica tu clave en AI Studio.`
-    }, { status: 200 });
+      const result = await model.generateContent(conversation);
+      const response = await result.response;
+      const text = response.text();
+
+      return Response.json({ 
+        response: text,
+        debug_model: modelName // Para saber cuál funcionó
+      });
+
+    } catch (error) {
+      console.warn(`Falló el modelo ${modelName}:`, error.message);
+      lastError = error;
+      // Si es un error de cuota (429) o no encontrado (404), seguimos al siguiente
+      continue;
+    }
   }
+
+  // Si llegamos aquí, todos fallaron
+  return Response.json({
+    error: true,
+    response: `[AGOTADO]: Todos los modelos fallaron. El último error fue: ${lastError.message}. Por favor, revisa tu cuota en Google AI Studio.`
+  }, { status: 200 });
 }
