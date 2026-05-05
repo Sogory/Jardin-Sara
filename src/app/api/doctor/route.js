@@ -6,7 +6,7 @@ export async function POST(request) {
   const { messages, mood, userName = "Sara", userGender = "female" } = body;
 
   // Lista de modelos para probar en orden de prioridad
-  const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+  const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-pro"];
   
   let lastError = null;
 
