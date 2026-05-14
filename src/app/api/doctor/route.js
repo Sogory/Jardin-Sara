@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 const buildSystemPrompt = (userName, userGender) => {
   const name = userName || "tú";
@@ -98,43 +98,49 @@ REGLA DE ORO: Una sola pregunta por respuesta. Nunca dos.`;
 };
 
 export async function POST(request) {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const body = await request.json();
   const { messages, mood, userName = "Sara", userGender = "female" } = body;
 
   const systemPrompt = buildSystemPrompt(userName, userGender);
 
-  // Lista de modelos para probar en orden de prioridad
-  const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-pro", "gemini-pro"];
+  // Limitar historial a los últimos 10 mensajes para controlar el consumo de tokens.
+  // Conversaciones largas no triplicarán el costo — igual que el límite en app.py.
+  const MAX_HISTORY = 10;
+  const recentMessages = messages.length > MAX_HISTORY
+    ? messages.slice(-MAX_HISTORY)
+    : messages;
 
+  // Construir historial de chat en formato correcto para el nuevo SDK
+  const history = [];
+  for (const msg of recentMessages.slice(0, -1)) {
+    history.push({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.content }],
+    });
+  }
+
+  const lastMessage = recentMessages[recentMessages.length - 1];
+  const userText = lastMessage
+    ? `Mood actual: ${mood}\n\n${lastMessage.content}`
+    : `Mood actual: ${mood}`;
+
+  // Lista de modelos para probar en orden de prioridad
+  const modelsToTry = ["gemini-2.5-flash", "gemini-1.5-pro"];
   let lastError = null;
 
   for (const modelName of modelsToTry) {
     try {
-      const model = genAI.getGenerativeModel({
+      const chat = ai.chats.create({
         model: modelName,
-        systemInstruction: systemPrompt,
+        config: {
+          systemInstruction: systemPrompt,
+        },
+        history,
       });
 
-      // Construir historial de chat en formato correcto
-      const history = [];
-      for (const msg of messages.slice(0, -1)) {
-        history.push({
-          role: msg.role === "user" ? "user" : "model",
-          parts: [{ text: msg.content }],
-        });
-      }
-
-      const chat = model.startChat({ history });
-
-      // Último mensaje del usuario
-      const lastMessage = messages[messages.length - 1];
-      const userText = lastMessage
-        ? `Mood actual: ${mood}\n\n${lastMessage.content}`
-        : `Mood actual: ${mood}`;
-
-      const result = await chat.sendMessage(userText);
-      const text = result.response.text();
+      const response = await chat.sendMessage({ message: userText });
+      const text = response.text;
 
       return Response.json({
         response: text,

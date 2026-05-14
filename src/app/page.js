@@ -1062,59 +1062,94 @@ function TamagotchiModal({ plant, onClose, xp, addXp, showToast, globalMood, set
 }
 
 // ===== TAB: SABER =====
+const SABER_POOL_KEY = (profile) => `saber_pool_${profile}`;
+const POOL_BATCH_SIZE = 20;   // cuántas pide a Gemini de golpe
+const SERVE_SIZE     = 3;     // cuántas muestra por toque de botón
+const POOL_REFILL_AT = 3;     // umbral para disparar recarga
+
 function TabSaber({ addXp, showToast, profile }) {
   const [activeCat, setActiveCat] = useState('todos');
   const [readCurios, setReadCurios] = useState([]);
   const [localCurios, setLocalCurios] = useState([]);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [poolSize, setPoolSize] = useState(0); // para debug/info visual
 
   useEffect(() => {
     if (!profile) return;
     try {
       const saved = JSON.parse(localStorage.getItem(`read_curios_${profile}`) || '[]');
       setReadCurios(saved);
-      // Solo cargar las que no se han leído
       const unreadStatic = CURIOSIDADES.filter(c => !saved.includes(c.id));
       setLocalCurios(unreadStatic);
+
+      // Mostrar tamaño actual del pool al cargar
+      const pool = JSON.parse(localStorage.getItem(SABER_POOL_KEY(profile)) || '[]');
+      setPoolSize(pool.length);
     } catch (e) { }
   }, []);
+
+  // Llama a Gemini y devuelve un array de curiosidades con IDs únicos
+  const fetchFromGemini = async (count) => {
+    const res = await fetch('/api/knowledge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userName: profile.charAt(0).toUpperCase() + profile.slice(1),
+        count,
+      }),
+    });
+    const data = await res.json();
+    if (!data.curiosities || data.curiosities.length === 0) throw new Error('Sin datos');
+    return data.curiosities.map(c => ({
+      ...c,
+      id: 'ai_' + Math.random().toString(36).substr(2, 9),
+    }));
+  };
+
+  const loadMore = async () => {
+    setLoadingMore(true);
+    try {
+      let pool = JSON.parse(localStorage.getItem(SABER_POOL_KEY(profile)) || '[]');
+
+      // ── RECARGA: tanque bajo ────────────────────────────────────────
+      if (pool.length < POOL_REFILL_AT) {
+        // Llamada real a Gemini (1 llamada para 20 curiosidades)
+        const nuevas = await fetchFromGemini(POOL_BATCH_SIZE);
+        pool = [...pool, ...nuevas];
+        showToast(`✨ El universo envió ${nuevas.length} conocimientos nuevos.`);
+      } else {
+        // ── CACHE HIT: animación falsa 350ms para mantener la mística ─
+        await new Promise(r => setTimeout(r, 350));
+      }
+
+      // Extraer las siguientes SERVE_SIZE del pool
+      const paraMostrar = pool.slice(0, SERVE_SIZE);
+      const poolRestante = pool.slice(SERVE_SIZE);
+
+      // Persistir pool actualizado
+      localStorage.setItem(SABER_POOL_KEY(profile), JSON.stringify(poolRestante));
+      setPoolSize(poolRestante.length);
+
+      // Añadir a la vista
+      setLocalCurios(prev => [...prev, ...paraMostrar]);
+
+      if (pool.length >= POOL_REFILL_AT) {
+        showToast('✨ El universo te ha enviado más curiosidades.');
+      }
+    } catch (e) {
+      showToast('⏳ El oráculo está descansando. Intenta en un momento.');
+    }
+    setLoadingMore(false);
+  };
 
   const readCurio = (id) => {
     if (readCurios.includes(id)) return;
     const newRead = [...readCurios, id];
     setReadCurios(newRead);
     localStorage.setItem(`read_curios_${profile}`, JSON.stringify(newRead));
-
-    // Quitar de la pantalla
     setLocalCurios(prev => prev.filter(c => c.id !== id));
-
     addXp(15);
     showToast('✨ +15 XP — el saber también riega el jardín.');
-  };
-
-  const loadMore = async () => {
-    setLoadingMore(true);
-    try {
-      const res = await fetch('/api/knowledge', { 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userName: profile.charAt(0).toUpperCase() + profile.slice(1)
-        })
-      });
-      const data = await res.json();
-      if (data.curiosities && data.curiosities.length > 0) {
-        // Asignar IDs únicos a los nuevos datos
-        const newCurios = data.curiosities.map(c => ({ ...c, id: 'ai_' + Math.random().toString(36).substr(2, 9) }));
-        setLocalCurios(prev => [...prev, ...newCurios]);
-        showToast('✨ El universo te ha enviado más curiosidades.');
-      } else {
-        showToast('⏳ El oráculo está descansando. Intenta en un momento.');
-      }
-    } catch (e) {
-      showToast('⏳ Error de conexión.');
-    }
-    setLoadingMore(false);
   };
 
   const cats = ['todos', 'griegos', 'plantas', 'historia'];
@@ -1129,6 +1164,12 @@ function TabSaber({ addXp, showToast, profile }) {
             {c === 'todos' ? 'Todos' : catLabels[c]}
           </button>
         ))}
+        {/* Indicador sutil del pool — solo si hay algo guardado */}
+        {poolSize > 0 && (
+          <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text3)', alignSelf: 'center' }}>
+            📦 {poolSize} en reserva
+          </span>
+        )}
       </div>
 
       {filtered.length === 0 && (
